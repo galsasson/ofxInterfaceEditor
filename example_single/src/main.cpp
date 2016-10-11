@@ -3,11 +3,27 @@
 
 //========================================================================
 int main( ){
-	ofSetupOpenGL(1024,768,OF_WINDOW);			// <-------- setup the GL context
+	ofGLFWWindowSettings s;
+	s.width = 1024;
+	s.height = 768;
+	s.numSamples = 0;
+	s.doubleBuffering = true;
+	s.depthBits = 24;
+	s.stencilBits = 8;
+	s.setGLVersion(3, 2);
+	shared_ptr<ofAppBaseWindow> win = ofCreateWindow(s);
 
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
-	ofRunApp(new ofApp());
+	shared_ptr<ofApp> app(new ofApp());
+
+
+	ofRunApp(win, app);
+	int ret = ofRunMainLoop();
+	// this kicks off the running of my app
+	// can be OF_WINDOW or OF_FULLSCREEN
+	// pass in width and height too:
+//	ofRunApp(new ofApp());
 
 }
