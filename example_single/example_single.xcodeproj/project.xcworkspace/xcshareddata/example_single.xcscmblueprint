@@ -1,0 +1,58 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "3A284B1F698C925A888F3B0328F314B024A74E0F" : 0,
+    "5DB7C332A3A89035E93556A2A38BF414005BA671" : 0,
+    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : 0,
+    "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F" : 0,
+    "136BB5672CF571A17A938AA99D06D78B2CD43142" : 0,
+    "5CC3662DE7B154BFBD52EC7DD2FAEF03F2CD148F" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "2A3C3151-76DA-453D-8349-2F262A9D89AB",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "3A284B1F698C925A888F3B0328F314B024A74E0F" : "ofxNanoVG\/libs\/nanosvg\/",
+    "5DB7C332A3A89035E93556A2A38BF414005BA671" : "ofxJSON\/",
+    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : "ofxInterface\/",
+    "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F" : "ofxInterfaceEditor\/",
+    "136BB5672CF571A17A938AA99D06D78B2CD43142" : "ofxNanoVG\/",
+    "5CC3662DE7B154BFBD52EC7DD2FAEF03F2CD148F" : "ofxNanoVG\/libs\/nanovg\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "example_single",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "example_single\/example_single.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/ofxNanoVG.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "136BB5672CF571A17A938AA99D06D78B2CD43142"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/nanosvg.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3A284B1F698C925A888F3B0328F314B024A74E0F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/ofxInterface.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5B15D703F0140ED6E55AD494A151B31DF74F0FD5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/nanovg.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5CC3662DE7B154BFBD52EC7DD2FAEF03F2CD148F"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:local-projects\/ofxJSON.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5DB7C332A3A89035E93556A2A38BF414005BA671"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/ofxInterfaceEditor.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F"
+    }
+  ]
+}
