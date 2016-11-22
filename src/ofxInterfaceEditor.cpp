@@ -21,7 +21,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	Json::Value conf = Json::objectValue;
 	conf["width"] = 500;
 	conf["height"] = 300;
-	conf["background-color"] = "#000000 100%";
+	conf["background-color"] = "#222324 100%";
 	conf["border-width"] = 2;
 	conf["border-color"] = "#ffffff 100%";
 	conf["border-corner"] = 10;
