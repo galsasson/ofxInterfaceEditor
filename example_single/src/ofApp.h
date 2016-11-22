@@ -2,6 +2,9 @@
 
 #include "ofMain.h"
 #include "ofxInterfaceEditor.h"
+#include "ofxInterface.h"
+
+using namespace ofxInterface;
 
 class ofApp : public ofBaseApp{
 
@@ -22,6 +25,8 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+	Node scene;
 	ofxInterfaceEditor editor;
+	bool bDebug;
 	
 };
