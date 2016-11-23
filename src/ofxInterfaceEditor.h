@@ -57,6 +57,7 @@ private:
 		ofColor borderColor;
 		ofColor selectionColor;
 		ofVec2f letterSize;
+		bool bSpecialEnter;
 	} cache;
 
 	struct selection_t {
