@@ -38,6 +38,7 @@ private:
 	int fboPad;
 	ofxNanoVG::Font* font;
 	float topY;
+	bool bShiftPressed;
 
 	struct caret_t {
 		int chr;

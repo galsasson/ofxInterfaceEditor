@@ -42,14 +42,15 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	ofAddListener(eventTouchUp, this, &ofxInterfaceEditor::onTouchUp);
 
 	// init variables
-	fboPad = 256;
-	bDirty = false;
-	font = NULL;
-	topY = 0;
+	fboPad =		256;
+	bDirty =		false;
+	font =			NULL;
+	topY =			0;
+	caret.line =	0;
+	caret.chr =		0;
+	caretBlink =	0;
+	bShiftPressed = false;
 	textLines.push_back("");
-	caret.line = 0;
-	caret.chr = 0;
-	caretBlink = 0;
 
 	loadConfig(config);
 }
@@ -143,45 +144,62 @@ void ofxInterfaceEditor::setText(const string &text)
 
 void ofxInterfaceEditor::keyPressed(int key)
 {
-	switch (key) {
-		case OF_KEY_LEFT:
-			caret.chr--;
-			break;
-		case OF_KEY_UP:
-			caret.line--;
-			break;
-		case OF_KEY_RIGHT:
-			caret.chr++;
-			break;
-		case OF_KEY_DOWN:
-			caret.line++;
-			break;
+	if (key == OF_KEY_SHIFT) {
+		bShiftPressed=true;
+		selection.begin = caret;
 	}
-	// clamp caret
-	caret.line = caret.line<0?0:caret.line>textLines.size()-1?textLines.size()-1:caret.line;
-	string& line = textLines[caret.line];
-	caret.chr = caret.chr<0?0:caret.chr>line.length()?line.length():caret.chr;
+	if (key >= OF_KEY_LEFT && key <= OF_KEY_DOWN) {
+		switch (key) {
+			case OF_KEY_LEFT:
+				caret.chr--;
+				break;
+			case OF_KEY_UP:
+				caret.line--;
+				break;
+			case OF_KEY_RIGHT:
+				caret.chr++;
+				break;
+			case OF_KEY_DOWN:
+				caret.line++;
+				break;
+		}
+		// clamp caret
+		caret.line = caret.line<0?0:caret.line>textLines.size()-1?textLines.size()-1:caret.line;
+		caret.chr = caret.chr<0?0:caret.chr>textLines[caret.line].length()?textLines[caret.line].length():caret.chr;
 
-	if (key >= 32 && key <= 126) {
-		line.insert(caret.chr, ofToString((char)key));
+		if (bShiftPressed) {
+			selection.end = caret;
+			selection.active = true;
+			ofLog() << "bShiftPressed==true";
+		}
+		else {
+			selection.active = false;
+			ofLog() << "bShiftPressed==false";
+		}
+	}
+	else if (key >= 32 && key <= 126) {
+		textLines[caret.line].insert(caret.chr, ofToString((char)key));
 		caret.chr++;
 	}
-	else if (key == 127) {			// Delete
+	else if (key == OF_KEY_BACKSPACE) {			// Delete
 		if (selection.active) {
 			clearSelection();
 		}
 		else if (caret.chr>0) {
-			line.erase(line.begin()+caret.chr-1);
+			textLines[caret.line].erase(textLines[caret.line].begin()+caret.chr-1);
 			caret.chr--;
 		}
 		else if (caret.line > 0) {
+			int chr = textLines[caret.line-1].size();
+			// append this line to previous
+			textLines[caret.line-1].append(textLines[caret.line]);
+			// remove this line
 			textLines.erase(textLines.begin()+caret.line);
 			caret.line--;
-			line = textLines[caret.line];
-			caret.chr = line.length();
+			caret.chr = chr;
 		}
 	}
-	else if (key == 13) {			// Enter
+	else if (key == OF_KEY_RETURN) {			// Enter
 		textLines.insert(textLines.begin()+caret.line+1, "");
 		caret.line++;
 		caret.chr=0;
@@ -193,7 +211,12 @@ void ofxInterfaceEditor::keyPressed(int key)
 
 void ofxInterfaceEditor::keyReleased(int key)
 {
-
+	switch (key) {
+		case OF_KEY_SHIFT:
+			bShiftPressed=false;
+			ofLog() << "set bShiftPressed to false";
+			break;
+	}
 }
 
 void ofxInterfaceEditor::addChar(char ch)
@@ -350,8 +373,7 @@ void ofxInterfaceEditor::clearSelection()
 		if (sc.chr > ec.chr) {
 			std::swap(sc, ec);
 		}
-		string& line = textLines[sc.line];
-		line.erase(line.begin()+sc.chr, line.begin()+(ec.chr));
+		textLines[sc.line].erase(textLines[sc.line].begin()+sc.chr, textLines[sc.line].begin()+(ec.chr));
 	}
 	else {
 		if (sc.line > ec.line) {
@@ -359,11 +381,13 @@ void ofxInterfaceEditor::clearSelection()
 		}
 
 		// first line
-		string& line = textLines[sc.line];
-		line.erase(sc.chr, line.size());
+		textLines[sc.line].erase(sc.chr, textLines[sc.line].size());
 		// last line
-		line = textLines[ec.line];
-		line.erase(0, ec.chr);
+		textLines[ec.line].erase(0, ec.chr);
+		// merge last line with line above
+		textLines[ec.line-1].append(textLines[ec.line]);
+		// erase last line
+		textLines.erase(textLines.begin()+ec.line);
 		// in between
 		for (int l=ec.line-1; l>sc.line; l--) {
 			textLines.erase(textLines.begin()+l);

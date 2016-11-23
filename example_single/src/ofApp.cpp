@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	bDebug = false;
+	ofSetFrameRate(30);
 	ofLogNotice("InterfaceEditor example");
 
 	scene.setSize(ofGetWidth(), ofGetHeight());
