@@ -26,6 +26,7 @@ public:
 	void draw();
 
 	void setText(const string& text);
+	void loadTextFile(const string& file);
 	void keyPressed(int key);
 	void keyReleased(int key);
 	void addChar(char ch);
@@ -37,16 +38,19 @@ private:
 	bool bDirty;
 	int fboPad;
 	ofxNanoVG::Font* font;
-	float topY;
+	ofRectangle view;
+	ofRectangle targetView;		// for animated scroll
 	bool bShiftPressed;
 
 	struct caret_t {
-		int chr;
 		int line;
+		int chr;
 	} caret;
 	float caretBlink;
 
 	struct configcache_t {
+		float width;
+		int lines;
 		float borderWidth;
 		float fontSize;
 		ofVec2f pad;

@@ -19,11 +19,11 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	// default config
 	config = Json::objectValue;
 	config["width"] = 500;
-	config["height"] = 300;
+	config["lines"] = 20;
 	config["pad"][0] = 6;
 	config["pad"][1] = 0;
 	config["background-color"] = "#111213 100%";
-	config["border-width"] = 16;
+	config["border-width"] = 4;
 	config["border-color"] = "#ffffff 100%";
 	config["border-corner"] = 10;
 	config["font"] = "Inconsolata-Regular.ttf";
@@ -43,14 +43,14 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	ofAddListener(eventTouchUp, this, &ofxInterfaceEditor::onTouchUp);
 
 	// init variables
-	fboPad =		256;
-	bDirty =		false;
-	font =			NULL;
-	topY =			0;
-	caret.line =	0;
-	caret.chr =		0;
-	caretBlink =	0;
+	fboPad =			256;
+	bDirty =			false;
+	font =				NULL;
+	caret.line =		0;
+	caret.chr =			0;
+	caretBlink =		0;
 	bShiftPressed = false;
+	view = targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
 	loadConfig(config);
@@ -59,7 +59,6 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 {
 	ofxJsonParser::objectMerge(config, conf);
-	setSize(config["width"].asFloat(), config["height"].asFloat());
 
 	// setup font
 	string fontName = config["font"].asString();
@@ -68,6 +67,8 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	}
 
 	// cache config value
+	cache.width = ofxJsonParser::parseFloat(config["width"], 500);
+	cache.lines = ofxJsonParser::parseInt(config["lines"], 1);
 	cache.borderWidth = ofxJsonParser::parseFloat(config["border-width"]);
 	cache.fontSize = ofxJsonParser::parseFloat(config["font-size"]);
 	cache.pad = ofxJsonParser::parseVector(config["pad"]);
@@ -81,11 +82,19 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	cache.letterSize = ofVec2f(0.5*cache.fontSize, cache.fontSize);
 	cache.bSpecialEnter = ofxJsonParser::parseBool(config["special-enter"]);
 
+
+	// set size
+	setSize(cache.width, cache.fontSize*cache.lines+cache.borderWidth);
+	view = ofRectangle(0, 0, getWidth(), getHeight());
+
 	bDirty = true;
 }
 
 void ofxInterfaceEditor::update(float dt)
 {
+	ofVec2f offset = (targetView.getPosition()-view.getPosition());
+	view.translate(0.5f*offset);
+
 //	if (bDirty) {
 		renderToFbo(lastRender);
 		bDirty = false;
@@ -142,6 +151,21 @@ void ofxInterfaceEditor::draw()
 void ofxInterfaceEditor::setText(const string &text)
 {
 	textLines = ofSplitString(text, "\n", false, false);
+	if (textLines.empty()) {
+		textLines.push_back("");
+	}
+	caret = caret_t{0,0};
+}
+
+void ofxInterfaceEditor::loadTextFile(const string &filename)
+{
+	ofFile file(filename);
+	if (!file.exists()) {
+		ofLogError("ofxInterfaceEditor") << "No such file: "<<filename;
+		return;
+	}
+
+	setText(file.readToBuffer().getText());
 }
 
 void ofxInterfaceEditor::keyPressed(int key)
@@ -172,11 +196,11 @@ void ofxInterfaceEditor::keyPressed(int key)
 		if (bShiftPressed) {
 			selection.end = caret;
 			selection.active = true;
-			ofLog() << "bShiftPressed==true";
+			ofLogVerbose() << "bShiftPressed==true";
 		}
 		else {
 			selection.active = false;
-			ofLog() << "bShiftPressed==false";
+			ofLogVerbose() << "bShiftPressed==false";
 		}
 	}
 	else if (key >= 32 && key <= 126) {
@@ -241,6 +265,21 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 	}
 
+	// Update view
+	ofVec2f cPos = toNode(caret);
+	if (cPos.y > getHeight()-cache.fontSize) {
+		targetView.y += cache.fontSize;
+		if (toNode(caret_t{int(textLines.size()-1),0}).y < getHeight()) {
+			targetView.y = (textLines.size()-cache.lines)*cache.fontSize;
+		}
+	}
+	else if (cPos.y < 0) {
+		targetView.y -= cache.fontSize;
+		if (targetView.y < 0) {
+			targetView.y = 0;
+		}
+	}
+
 	caretBlink=0;
 
 }
@@ -250,7 +289,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 	switch (key) {
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
-			ofLog() << "set bShiftPressed to false";
+			ofLogVerbose() << "set bShiftPressed to false";
 			break;
 	}
 }
@@ -286,10 +325,16 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		ofxNanoVG::one().fillRect(0.5*cache.borderWidth, 0.5*cache.borderWidth, cache.lineNumbersWidth, getHeight()-cache.borderWidth, ofColor(55, 56, 57));
 	}
 
-	caret_t first = toCaret(ofVec2f(0, 0));
+	// draw only visible part of text
+	double firstLine;
+	double frac = modf(view.y/cache.fontSize, &firstLine);
+	// figure out first and last lines
+	caret_t first{(int)firstLine,0};
 	caret_t last = toCaret(ofVec2f(0, getHeight()));
 	ofxNanoVG::one().setFillColor(cache.fontColor);
-	for (int i=first.line; i<last.line; i++) {
+	ofxNanoVG::one().enableScissor(0.5*cache.borderWidth, 0.5*cache.borderWidth, getWidth()-cache.borderWidth, getHeight()-cache.borderWidth);
+	ofxNanoVG::one().translateMatrix(-view.x, -frac*cache.fontSize);
+	for (int i=first.line; i<=last.line; i++) {
 		string& line = textLines[i];
 		if (cache.bLineNumbers) {
 			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_TOP);
@@ -299,6 +344,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		ofxNanoVG::one().drawText(font, 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x, cache.pad.y+y, line, cache.fontSize);
 		y += cache.fontSize;
 	}
+	ofxNanoVG::one().disableScissor();
 
 	ofxNanoVG::one().endFrame();
 
@@ -310,8 +356,8 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 
 void ofxInterfaceEditor::allocateFbo(ofFbo& fbo)
 {
-	int reqW = int(config["width"].asFloat()) + fboPad;
-	int reqH = int(config["height"].asFloat()) + fboPad;
+	int reqW = int(getWidth()) + fboPad;
+	int reqH = int(getHeight()) + fboPad;
 	if (fbo.getWidth() < reqW ||
 		fbo.getHeight() < reqH ) {
 		ofFbo::Settings s;
@@ -339,14 +385,15 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	}
 	p.x -= cache.pad.x + 0.5*cache.borderWidth;
 	p.y -= cache.pad.y + 0.5*cache.borderWidth;
-	p.y += topY;
+	p.x += targetView.x;
+	p.y += targetView.y;
 
 	c.line = p.y/cache.fontSize;
 	if (c.line < 0) {
 		c.line = 0;
 	}
-	else if (c.line > textLines.size()) {
-		c.line = textLines.size();
+	else if (c.line > textLines.size()-1) {
+		c.line = textLines.size()-1;
 	}
 	string& line = textLines[c.line];
 
@@ -370,6 +417,8 @@ ofVec2f ofxInterfaceEditor::toNode(int line, int chr)
 	ofVec2f p(chr*cache.letterSize.x, line*cache.fontSize);
 	p.x += 0.5*cache.borderWidth+cache.pad.x;
 	p.y += 0.5*cache.borderWidth+cache.pad.y;
+	p.x -= targetView.x;
+	p.y -= targetView.y;
 
 	if (cache.bLineNumbers) {
 		p.x += cache.lineNumbersWidth;
