@@ -72,6 +72,7 @@ private:
 	void onTouchDown(TouchEvent& event);
 	void onTouchMove(TouchEvent& event);
 	void onTouchUp(TouchEvent& event);
+	void clearSelection();
 };
 
 #endif /* ofxInterfaceEditor_h */
