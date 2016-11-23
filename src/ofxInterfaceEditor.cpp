@@ -31,6 +31,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	config["font-size"] = 18;
 	config["line-numbers"] = true;
 	config["selection-color"] = "#aaaaaa 100%";
+	config["special-enter"] = false;
 	config["initial-text"] = "Write here...";
 
 	// setup nanovg
@@ -78,6 +79,7 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	cache.borderColor = ofxJsonParser::parseColor(config["border-color"]);
 	cache.selectionColor = ofxJsonParser::parseColor(config["selection-color"]);
 	cache.letterSize = ofVec2f(0.5*cache.fontSize, cache.fontSize);
+	cache.bSpecialEnter = ofxJsonParser::parseBool(config["special-enter"]);
 
 	bDirty = true;
 }
@@ -199,10 +201,44 @@ void ofxInterfaceEditor::keyPressed(int key)
 			caret.chr = chr;
 		}
 	}
+	else if (key == OF_KEY_DEL) {
+		if (selection.active) {
+			// remove selection
+		}
+		else {
+			if (textLines[caret.line].size() == caret.chr) {
+				// delete at end of line
+				if (caret.line < textLines.size()-1) {
+					textLines[caret.line].append(textLines[caret.line+1]);
+					textLines.erase(textLines.begin()+caret.line+1);
+				}
+			}
+			else {
+				// delete anywhere else
+				textLines[caret.line].erase(caret.chr, 1);
+			}
+		}
+	}
 	else if (key == OF_KEY_RETURN) {			// Enter
-		textLines.insert(textLines.begin()+caret.line+1, "");
-		caret.line++;
-		caret.chr=0;
+		if (cache.bSpecialEnter) {
+			if (caret.chr == textLines[caret.line].size()) {
+				// Enter at end of line
+				textLines.insert(textLines.begin()+caret.line+1, "");
+				caret.line++;
+				caret.chr=0;
+			}
+			else {
+				// Enter in middle of line
+			}
+		}
+		else {
+			// Normal enter behavior
+			string afterCaret = textLines[caret.line].substr(caret.chr, textLines[caret.line].size());
+			textLines[caret.line].erase(caret.chr, textLines[caret.line].size()-caret.chr);
+			textLines.insert(textLines.begin()+caret.line+1, afterCaret);
+			caret.line++;
+			caret.chr=0;
+		}
 	}
 
 	caretBlink=0;
@@ -381,7 +417,7 @@ void ofxInterfaceEditor::clearSelection()
 		}
 
 		// first line
-		textLines[sc.line].erase(sc.chr, textLines[sc.line].size());
+		textLines[sc.line].erase(sc.chr, textLines[sc.line].size()-sc.chr);
 		// last line
 		textLines[ec.line].erase(0, ec.chr);
 		// merge last line with line above
