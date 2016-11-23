@@ -8,9 +8,10 @@
     "5CC3662DE7B154BFBD52EC7DD2FAEF03F2CD148F" : 0,
     "3A284B1F698C925A888F3B0328F314B024A74E0F" : 0,
     "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F" : 0,
+    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : 0,
     "136BB5672CF571A17A938AA99D06D78B2CD43142" : 0,
     "5DB7C332A3A89035E93556A2A38BF414005BA671" : 0,
-    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : 0
+    "D5B1101D6DC6760B8312E0BF44AAB551C9822B66" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "2A3C3151-76DA-453D-8349-2F262A9D89AB",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
@@ -18,9 +19,10 @@
     "5CC3662DE7B154BFBD52EC7DD2FAEF03F2CD148F" : "ofxNanoVG\/libs\/nanovg\/",
     "3A284B1F698C925A888F3B0328F314B024A74E0F" : "ofxNanoVG\/libs\/nanosvg\/",
     "F1ED2399D3B97CEA2EBF8F58D3E56200ED8BF34F" : "ofxInterfaceEditor\/",
+    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : "ofxInterface\/",
     "136BB5672CF571A17A938AA99D06D78B2CD43142" : "ofxNanoVG\/",
     "5DB7C332A3A89035E93556A2A38BF414005BA671" : "ofxJSON\/",
-    "5B15D703F0140ED6E55AD494A151B31DF74F0FD5" : "ofxInterface\/"
+    "D5B1101D6DC6760B8312E0BF44AAB551C9822B66" : "ofxJsonHelper\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "example_single",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -55,6 +57,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:local-projects\/ofxJSON.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5DB7C332A3A89035E93556A2A38BF414005BA671"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/ofxJsonHelper.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "D5B1101D6DC6760B8312E0BF44AAB551C9822B66"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:galsasson\/ofxInterfaceEditor.git",
