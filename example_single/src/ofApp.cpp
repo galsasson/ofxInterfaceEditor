@@ -9,7 +9,7 @@ void ofApp::setup(){
 	TouchManager::one().setup(&scene);
 
 	editor.setPosition(50, 50);
-	editor.setText("Hell0!!!\nHi there...\niiiiii\nxxxxxxxxxxx\nthis line is a pretty long line\n\n\n\n\n\nEmpty lines above!!!\n\n\n\nMove Lines here");
+//	editor.setText("Hell0!!!\nHi there...\niiiiii\nxxxxxxxxxxx\nthis line is a pretty long line\n\n\n\n\n\nEmpty lines above!!!\n\n\n\nMove Lines here");
 
 	scene.addChild(&editor);
 

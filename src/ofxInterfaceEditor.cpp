@@ -143,6 +143,51 @@ void ofxInterfaceEditor::setText(const string &text)
 
 void ofxInterfaceEditor::keyPressed(int key)
 {
+	switch (key) {
+		case OF_KEY_LEFT:
+			caret.chr--;
+			break;
+		case OF_KEY_UP:
+			caret.line--;
+			break;
+		case OF_KEY_RIGHT:
+			caret.chr++;
+			break;
+		case OF_KEY_DOWN:
+			caret.line++;
+			break;
+	}
+	// clamp caret
+	caret.line = caret.line<0?0:caret.line>textLines.size()-1?textLines.size()-1:caret.line;
+	string& line = textLines[caret.line];
+	caret.chr = caret.chr<0?0:caret.chr>line.length()?line.length():caret.chr;
+
+	if (key >= 32 && key <= 126) {
+		line.insert(caret.chr, ofToString((char)key));
+		caret.chr++;
+	}
+	else if (key == 127) {			// Delete
+		if (selection.active) {
+			clearSelection();
+		}
+		else if (caret.chr>0) {
+			line.erase(line.begin()+caret.chr-1);
+			caret.chr--;
+		}
+		else if (caret.line > 0) {
+			textLines.erase(textLines.begin()+caret.line);
+			caret.line--;
+			line = textLines[caret.line];
+			caret.chr = line.length();
+		}
+	}
+	else if (key == 13) {			// Enter
+		textLines.insert(textLines.begin()+caret.line+1, "");
+		caret.line++;
+		caret.chr=0;
+	}
+
+	caretBlink=0;
 
 }
 
@@ -241,8 +286,8 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	if (c.line < 0) {
 		c.line = 0;
 	}
-	else if (c.line > textLines.size()-1) {
-		c.line = textLines.size()-1;
+	else if (c.line > textLines.size()) {
+		c.line = textLines.size();
 	}
 	string& line = textLines[c.line];
 
@@ -295,4 +340,35 @@ void ofxInterfaceEditor::onTouchUp(TouchEvent& event)
 		selection.begin.line == selection.end.line) {
 		selection.active = false;
 	}
+}
+
+void ofxInterfaceEditor::clearSelection()
+{
+	caret_t sc = selection.begin;
+	caret_t	ec = selection.end;
+	if (sc.line == ec.line) {
+		if (sc.chr > ec.chr) {
+			std::swap(sc, ec);
+		}
+		string& line = textLines[sc.line];
+		line.erase(line.begin()+sc.chr, line.begin()+(ec.chr));
+	}
+	else {
+		if (sc.line > ec.line) {
+			std::swap(sc, ec);
+		}
+
+		// first line
+		string& line = textLines[sc.line];
+		line.erase(sc.chr, line.size());
+		// last line
+		line = textLines[ec.line];
+		line.erase(0, ec.chr);
+		// in between
+		for (int l=ec.line-1; l>sc.line; l--) {
+			textLines.erase(textLines.begin()+l);
+		}
+	}
+	caret = sc;
+	selection.active = false;
 }
