@@ -18,7 +18,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 {
 	// default config
 	config = Json::objectValue;
-	config["width"] = 900;
+	config["width"] = 1300;
 	config["lines"] = 20;
 	config["pad"][0] = 6;
 	config["pad"][1] = 0;
@@ -28,7 +28,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	config["border-corner"] = 10;
 	config["font"] = "Inconsolata-Regular.ttf";
 	config["font-color"] = "#ffffff 100%";
-	config["font-size"] = 36;
+	config["font-size"] = 40;
 	config["line-numbers"] = true;
 	config["selection-color"] = "#aaaaaa 100%";
 	config["special-enter"] = false;
@@ -73,13 +73,12 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	cache.fontSize = ofxJsonParser::parseFloat(config["font-size"]);
 	cache.pad = ofxJsonParser::parseVector(config["pad"]);
 	cache.bLineNumbers = ofxJsonParser::parseBool(config["line-numbers"]);
-	ofxNanoVG::one().resetMatrix();
-	cache.lineNumbersWidth = getLineNumberWidth();
 	cache.fontColor = ofxJsonParser::parseColor(config["font-color"]);
 	cache.bgColor = ofxJsonParser::parseColor(config["background-color"]);
 	cache.borderColor = ofxJsonParser::parseColor(config["border-color"]);
 	cache.selectionColor = ofxJsonParser::parseColor(config["selection-color"]);
-	cache.letterSize = ofVec2f(0.472*cache.fontSize, cache.fontSize);
+	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", cache.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "b", cache.fontSize).width;
+	cache.letterSize = ofVec2f(lw, cache.fontSize);
 	cache.bSpecialEnter = ofxJsonParser::parseBool(config["special-enter"]);
 
 
@@ -270,11 +269,8 @@ void ofxInterfaceEditor::keyPressed(int key)
 
 	// Update view
 	ofVec2f cPos = toNode(caret);
-	if (cPos.y > getHeight()-cache.fontSize) {
-		targetView.y += cache.fontSize;
-		if (toNode(caret_t{int(textLines.size()-1),0}).y < getHeight()) {
-			targetView.y = (textLines.size()-cache.lines)*cache.fontSize;
-		}
+	if (cPos.y > getHeight()-0.5*cache.fontSize) {	// if caret goes outside of the view
+		targetView.y += cache.fontSize;				// advance one line
 	}
 	else if (cPos.y < 0) {
 		targetView.y -= cache.fontSize;
@@ -436,7 +432,6 @@ void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 	selection.begin = selection.end = caret = toCaret(local);
 	selection.active = false;
 	caretBlink = 0;
-	ofLogNotice("Caret") << caret.line << "x" << caret.chr;
 }
 
 void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
@@ -487,14 +482,14 @@ void ofxInterfaceEditor::clearSelection()
 
 float ofxInterfaceEditor::getLineNumberWidth()
 {
-	string str;
+	float w=0;
 	int linesNum = textLines.size();
-   while (linesNum>0) {
-	   str += " ";
-	   linesNum/=10;
-   }
+	while (linesNum>0) {
+		w += cache.letterSize.x;
+		linesNum/=10;
+	}
 
-   return cache.bLineNumbers?ofxNanoVG::one().getTextBounds(font, 0, 0, str, cache.fontSize).width+10:0;
+	return w;
 }
 
 
