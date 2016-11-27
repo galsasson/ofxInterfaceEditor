@@ -74,12 +74,12 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	cache.pad = ofxJsonParser::parseVector(config["pad"]);
 	cache.bLineNumbers = ofxJsonParser::parseBool(config["line-numbers"]);
 	ofxNanoVG::one().resetMatrix();
-	cache.lineNumbersWidth = cache.bLineNumbers?ofxNanoVG::one().getTextBounds(font, 0, 0, ofToString(textLines.size()), cache.fontSize).x+20:0;
+	cache.lineNumbersWidth = getLineNumberWidth();
 	cache.fontColor = ofxJsonParser::parseColor(config["font-color"]);
 	cache.bgColor = ofxJsonParser::parseColor(config["background-color"]);
 	cache.borderColor = ofxJsonParser::parseColor(config["border-color"]);
 	cache.selectionColor = ofxJsonParser::parseColor(config["selection-color"]);
-	cache.letterSize = ofVec2f(0.5*cache.fontSize, cache.fontSize);
+	cache.letterSize = ofVec2f(0.472*cache.fontSize, cache.fontSize);
 	cache.bSpecialEnter = ofxJsonParser::parseBool(config["special-enter"]);
 
 
