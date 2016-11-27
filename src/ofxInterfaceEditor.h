@@ -26,6 +26,7 @@ public:
 	void draw();
 
 	void setText(const string& text);
+	string getText();
 	void loadTextFile(const string& file);
 	void keyPressed(int key);
 	void keyReleased(int key);

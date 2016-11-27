@@ -157,6 +157,19 @@ void ofxInterfaceEditor::setText(const string &text)
 		textLines.push_back("");
 	}
 	caret = caret_t{0,0};
+	targetView = ofRectangle(0, 0, getWidth(), getHeight());
+}
+
+string ofxInterfaceEditor::getText()
+{
+	string str;
+	for (int i=0; i<textLines.size(); i++) {
+		str += textLines[i];
+		if (i<textLines.size()-1) {
+			str += "\n";
+		}
+	}
+	return str;
 }
 
 void ofxInterfaceEditor::loadTextFile(const string &filename)

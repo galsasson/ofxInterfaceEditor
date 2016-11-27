@@ -10,7 +10,6 @@ void ofApp::setup(){
 
 	editor.setPosition(50, 50);
 	editor.loadTextFile("example.hpp");
-//	editor.setText("Hell0!!!\nHi there...\niiiiii\nxxxxxxxxxxx\nthis line is a pretty long line\n\n\n\n\n\nEmpty lines above!!!\n\n\n\nMove Lines here");
 
 	scene.addChild(&editor);
 
