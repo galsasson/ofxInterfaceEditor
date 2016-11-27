@@ -18,7 +18,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 {
 	// default config
 	config = Json::objectValue;
-	config["width"] = 500;
+	config["width"] = 900;
 	config["lines"] = 20;
 	config["pad"][0] = 6;
 	config["pad"][1] = 0;
@@ -28,7 +28,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	config["border-corner"] = 10;
 	config["font"] = "Inconsolata-Regular.ttf";
 	config["font-color"] = "#ffffff 100%";
-	config["font-size"] = 18;
+	config["font-size"] = 36;
 	config["line-numbers"] = true;
 	config["selection-color"] = "#aaaaaa 100%";
 	config["special-enter"] = false;
