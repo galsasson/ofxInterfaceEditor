@@ -79,6 +79,7 @@ private:
 	void onTouchMove(TouchEvent& event);
 	void onTouchUp(TouchEvent& event);
 	void clearSelection();
+	float getLineNumberWidth();
 };
 
 #endif /* ofxInterfaceEditor_h */
