@@ -95,6 +95,9 @@ void ofxInterfaceEditor::update(float dt)
 	ofVec2f offset = (targetView.getPosition()-view.getPosition());
 	view.translate(0.5f*offset);
 
+	// can be optimized (calc only on change);
+	cache.lineNumbersWidth = getLineNumberWidth();
+
 //	if (bDirty) {
 		renderToFbo(lastRender);
 		bDirty = false;
@@ -481,3 +484,17 @@ void ofxInterfaceEditor::clearSelection()
 	caret = sc;
 	selection.active = false;
 }
+
+float ofxInterfaceEditor::getLineNumberWidth()
+{
+	string str;
+	int linesNum = textLines.size();
+   while (linesNum>0) {
+	   str += " ";
+	   linesNum/=10;
+   }
+
+   return cache.bLineNumbers?ofxNanoVG::one().getTextBounds(font, 0, 0, str, cache.fontSize).width+10:0;
+}
+
+
