@@ -189,7 +189,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		bShiftPressed=true;
 		selection.begin = caret;
 	}
-	if (key >= OF_KEY_LEFT && key <= OF_KEY_DOWN) {
+	if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
 		switch (key) {
 			case OF_KEY_LEFT:
 				caret.chr--;
@@ -214,6 +214,12 @@ void ofxInterfaceEditor::keyPressed(int key)
 				break;
 			case OF_KEY_DOWN:
 				caret.line++;
+				break;
+			case OF_KEY_HOME:
+				caret.chr = 0;
+				break;
+			case OF_KEY_END:
+				caret.chr = textLines[caret.line].size();
 				break;
 		}
 		// clamp caret
