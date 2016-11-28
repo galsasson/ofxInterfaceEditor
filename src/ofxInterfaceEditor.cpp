@@ -193,12 +193,24 @@ void ofxInterfaceEditor::keyPressed(int key)
 		switch (key) {
 			case OF_KEY_LEFT:
 				caret.chr--;
+				if (caret.chr < 0) {
+					if (caret.line>0) {
+						caret.line--;
+						caret.chr = textLines[caret.line].size();
+					}
+				}
 				break;
 			case OF_KEY_UP:
 				caret.line--;
 				break;
 			case OF_KEY_RIGHT:
 				caret.chr++;
+				if (caret.chr > textLines[caret.line].size()) {
+					if (caret.line < textLines.size()-1) {
+						caret.chr=0;
+						caret.line++;
+					}
+				}
 				break;
 			case OF_KEY_DOWN:
 				caret.line++;
