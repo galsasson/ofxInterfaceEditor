@@ -254,7 +254,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 	}
 	else if (key == OF_KEY_DEL) {
 		if (selection.active) {
-			// remove selection
+			clearSelection();
 		}
 		else {
 			if (textLines[caret.line].size() == caret.chr) {
@@ -489,15 +489,14 @@ void ofxInterfaceEditor::clearSelection()
 		}
 
 		// first line
-		textLines[sc.line].erase(sc.chr, textLines[sc.line].size()-sc.chr);
+		textLines[sc.line].erase(textLines[sc.line].begin()+sc.chr, textLines[sc.line].end());
 		// last line
-		textLines[ec.line].erase(0, ec.chr);
-		// merge last line with line above
-		textLines[ec.line-1].append(textLines[ec.line]);
-		// erase last line
-		textLines.erase(textLines.begin()+ec.line);
+		textLines[ec.line].erase(textLines[ec.line].begin(), textLines[ec.line].begin()+ec.chr);
+		// merge last line with first above
+		textLines[sc.line].append(textLines[ec.line]);
+
 		// in between
-		for (int l=ec.line-1; l>sc.line; l--) {
+		for (int l=ec.line; l>sc.line; l--) {
 			textLines.erase(textLines.begin()+l);
 		}
 	}
