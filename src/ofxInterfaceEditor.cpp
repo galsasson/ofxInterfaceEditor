@@ -237,6 +237,9 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 	}
 	else if (key >= 32 && key <= 126) {
+		if (selection.active) {
+			clearSelection();
+		}
 		textLines[caret.line].insert(caret.chr, ofToString((char)key));
 		caret.chr++;
 	}
@@ -289,6 +292,9 @@ void ofxInterfaceEditor::keyPressed(int key)
 			}
 		}
 		else {
+			if (selection.active) {
+				clearSelection();
+			}
 			// Normal enter behavior
 			string afterCaret = textLines[caret.line].substr(caret.chr, textLines[caret.line].size());
 			textLines[caret.line].erase(caret.chr, textLines[caret.line].size()-caret.chr);
