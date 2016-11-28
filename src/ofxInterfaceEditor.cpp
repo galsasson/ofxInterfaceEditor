@@ -190,7 +190,13 @@ void ofxInterfaceEditor::keyPressed(int key)
 			selection.begin = caret;
 		}
 	}
-	if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
+	else if (key == OF_KEY_COMMAND) {
+		bCommandKeyPressed=true;
+	}
+	else if (key == OF_KEY_CONTROL) {
+		bControlKeyPressed=true;
+	}
+	else if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
 		switch (key) {
 			case OF_KEY_LEFT:
 				caret.chr--;
@@ -238,11 +244,51 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 	}
 	else if (key >= 32 && key <= 126) {
-		if (selection.active) {
-			clearSelection();
+		if (bControlKeyPressed || bCommandKeyPressed) {
+			// command/control with character
+			if (key == 'x') {					// Cut
+				if (selection.active) {
+					string str = getText();
+					caret_t sb = selection.begin;
+					caret_t se = selection.end;
+					if (((sb.line == se.line) && (sb.chr > se.chr)) ||
+						sb.line > se.line) {
+						swap(sb, se);
+					}
+					size_t bpos = toTextPos(sb);
+					size_t epos = toTextPos(se);
+					pasteboard = str.substr(bpos, epos);
+					str.erase(bpos, epos);
+					setText(str);
+				}
+			}
+			else if (key == 'c') {				// Copy
+
+			}
+			else if (key == 'v') {				// Paste
+				if (pasteboard.size()>0) {
+					string str = getText();
+					size_t cpos = toTextPos(caret);
+					stringstream newText;
+					newText << str.substr(0, cpos);
+					newText << pasteboard;
+					newText << str.substr(cpos, str.size());
+					setText(newText.str());
+				}
+
+			}
+			else if (key == 'z') {				// Undo
+
+			}
 		}
-		textLines[caret.line].insert(caret.chr, ofToString((char)key));
-		caret.chr++;
+		else {
+			// This is normal letter typing
+			if (selection.active) {
+				clearSelection();
+			}
+			textLines[caret.line].insert(caret.chr, ofToString((char)key));
+			caret.chr++;
+		}
 	}
 	else if (key == OF_KEY_BACKSPACE) {			// Delete
 		if (selection.active) {
@@ -327,6 +373,12 @@ void ofxInterfaceEditor::keyReleased(int key)
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
 			ofLogVerbose() << "set bShiftPressed to false";
+			break;
+		case OF_KEY_COMMAND:
+			bCommandKeyPressed = false;
+			break;
+		case OF_KEY_CONTROL:
+			bControlKeyPressed = false;
 			break;
 	}
 }
@@ -462,6 +514,27 @@ ofVec2f ofxInterfaceEditor::toNode(int line, int chr)
 	}
 
 	return p;
+}
+
+size_t ofxInterfaceEditor::toTextPos(const caret_t& c)
+{
+	size_t pos=0;
+	for (unsigned int l=0; l<c.line && l<textLines.size(); l++) {
+		pos += textLines[l].size()+1;
+	}
+	pos += c.chr;
+	return pos;
+}
+
+ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
+{
+	caret_t c{0,0};
+	while (textPos>0) {
+		if (textLines[c.line].size()>textPos) {
+			// TODO: finish this function
+		}
+	}
+	return c;
 }
 
 void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
