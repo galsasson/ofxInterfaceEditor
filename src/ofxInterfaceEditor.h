@@ -42,6 +42,9 @@ private:
 	ofRectangle view;
 	ofRectangle targetView;		// for animated scroll
 	bool bShiftPressed;
+	bool bCommandKeyPressed;
+	bool bControlKeyPressed;
+	string pasteboard;
 
 	struct caret_t {
 		int line;
@@ -76,6 +79,8 @@ private:
 	caret_t toCaret(ofVec2f p);
 	ofVec2f toNode(const caret_t& caret);
 	ofVec2f toNode(int line, int chr);
+	size_t toTextPos(const caret_t& c);
+	caret_t toCaret(size_t textPos);
 	void onTouchDown(TouchEvent& event);
 	void onTouchMove(TouchEvent& event);
 	void onTouchUp(TouchEvent& event);
