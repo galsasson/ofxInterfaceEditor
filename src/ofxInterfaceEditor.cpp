@@ -101,7 +101,7 @@ void ofxInterfaceEditor::update(float dt)
 		renderToFbo(lastRender);
 		bDirty = false;
 //	}
-	caretBlink += 6*dt;
+	caretBlink += 10*dt;
 }
 
 void ofxInterfaceEditor::draw()
@@ -135,14 +135,13 @@ void ofxInterfaceEditor::draw()
 			ofDrawRectangle(leftEdge, ePos.y, ePos.x-leftEdge, cache.fontSize);
 		}
 	}
-	else {
-		// draw caret
-		ofVec2f cPos = toNode(caret);
-		float val = cos(caretBlink);
-		if (val>0) {
-			ofSetColor(255);
-			ofDrawRectangle(cPos.x, cPos.y, 1, cache.fontSize);
-		}
+
+	// draw caret
+	ofVec2f cPos = toNode(caret);
+	float val = cos(caretBlink);
+	if (val>0) {
+		ofSetColor(255);
+		ofDrawRectangle(cPos.x, cPos.y, 1, cache.fontSize);
 	}
 
 	ofSetColor(255);
@@ -187,7 +186,9 @@ void ofxInterfaceEditor::keyPressed(int key)
 {
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
-		selection.begin = caret;
+		if (!selection.active) {
+			selection.begin = caret;
+		}
 	}
 	if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
 		switch (key) {
