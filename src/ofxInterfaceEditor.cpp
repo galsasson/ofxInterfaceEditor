@@ -17,24 +17,24 @@ ofxInterfaceEditor::~ofxInterfaceEditor()
 ofxInterfaceEditor::ofxInterfaceEditor()
 {
 	// default config
-	config = Json::objectValue;
-	config["width"] = 700;
-	config["lines"] = 20;
-	config["pad"][0] = 6;
-	config["pad"][1] = 0;
-	config["background-color"] = "#222322 100%";
-	config["border-width"] = 2;
-	config["border-color"] = "#ffffff 100%";
-	config["border-corner"] = 10;
-	config["font"] = "Inconsolata-Regular.ttf";
-	config["font-color"] = "#ffffff 100%";
-	config["font-size"] = 22;
-	config["line-numbers"] = true;
-	config["line-numbers-color"] = "#ffffff 100%";
-	config["line-numbers-bg-color"] = "#434445 100%";
-	config["selection-color"] = "#aaaaaa 50%";
-	config["special-enter"] = false;
-	config["initial-text"] = "Write here...";
+	configJson = Json::objectValue;
+	configJson["width"] = 700;
+	configJson["lines"] = 20;
+	configJson["pad"][0] = 6;
+	configJson["pad"][1] = 0;
+	configJson["background-color"] = "#222322 100%";
+	configJson["border-width"] = 2;
+	configJson["border-color"] = "#ffffff 100%";
+	configJson["border-corner"] = 10;
+	configJson["font"] = "Inconsolata-Regular.ttf";
+	configJson["font-color"] = "#ffffff 100%";
+	configJson["font-size"] = 22;
+	configJson["line-numbers"] = true;
+	configJson["line-numbers-color"] = "#ffffff 100%";
+	configJson["line-numbers-bg-color"] = "#434445 100%";
+	configJson["selection-color"] = "#aaaaaa 50%";
+	configJson["special-enter"] = false;
+	configJson["initial-text"] = "Write here...";
 
 	// setup nanovg
 	ofxNanoVG::one().setup();
@@ -55,40 +55,40 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
-	loadConfig(config);
+	setConfig(configJson);
 }
 
-void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
+void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 {
-	ofxJsonParser::objectMerge(config, conf);
+	ofxJsonParser::objectMerge(configJson, conf);
 
 	// setup font
-	string fontName = config["font"].asString();
+	string fontName = configJson["font"].asString();
 	if ((font = ofxNanoVG::one().getFont(fontName)) == NULL) {
 		font = ofxNanoVG::one().addFont(fontName, fontName);
 	}
 
 	// cache config value
-	cache.width = ofxJsonParser::parseFloat(config["width"], 500);
-	cache.lines = ofxJsonParser::parseInt(config["lines"], 1);
-	cache.borderWidth = ofxJsonParser::parseFloat(config["border-width"]);
-	cache.borderCorner = ofxJsonParser::parseFloat(config["border-corner"]);
-	cache.fontSize = ofxJsonParser::parseFloat(config["font-size"]);
-	cache.pad = ofxJsonParser::parseVector(config["pad"]);
-	cache.bLineNumbers = ofxJsonParser::parseBool(config["line-numbers"]);
-	cache.lineNumbersColor = ofxJsonParser::parseColor(config["line-numbers-color"]);
-	cache.lineNumbersBGColor = ofxJsonParser::parseColor(config["line-numbers-bg-color"]);
-	cache.fontColor = ofxJsonParser::parseColor(config["font-color"]);
-	cache.bgColor = ofxJsonParser::parseColor(config["background-color"]);
-	cache.borderColor = ofxJsonParser::parseColor(config["border-color"]);
-	cache.selectionColor = ofxJsonParser::parseColor(config["selection-color"]);
-	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", cache.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "b", cache.fontSize).width;
-	cache.letterSize = ofVec2f(lw, cache.fontSize);
-	cache.bSpecialEnter = ofxJsonParser::parseBool(config["special-enter"]);
+	config.width = ofxJsonParser::parseFloat(configJson["width"], 500);
+	config.lines = ofxJsonParser::parseInt(configJson["lines"], 1);
+	config.borderWidth = ofxJsonParser::parseFloat(configJson["border-width"]);
+	config.borderCorner = ofxJsonParser::parseFloat(configJson["border-corner"]);
+	config.fontSize = ofxJsonParser::parseFloat(configJson["font-size"]);
+	config.pad = ofxJsonParser::parseVector(configJson["pad"]);
+	config.bLineNumbers = ofxJsonParser::parseBool(configJson["line-numbers"]);
+	config.lineNumbersColor = ofxJsonParser::parseColor(configJson["line-numbers-color"]);
+	config.lineNumbersBGColor = ofxJsonParser::parseColor(configJson["line-numbers-bg-color"]);
+	config.fontColor = ofxJsonParser::parseColor(configJson["font-color"]);
+	config.bgColor = ofxJsonParser::parseColor(configJson["background-color"]);
+	config.borderColor = ofxJsonParser::parseColor(configJson["border-color"]);
+	config.selectionColor = ofxJsonParser::parseColor(configJson["selection-color"]);
+	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", config.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "b", config.fontSize).width;
+	config.letterSize = ofVec2f(lw, config.fontSize);
+	config.bSpecialEnter = ofxJsonParser::parseBool(configJson["special-enter"]);
 
 
 	// set size
-	setSize(cache.width, cache.fontSize*cache.lines+cache.borderWidth);
+	setSize(config.width, config.fontSize*config.lines+config.borderWidth);
 	view = ofRectangle(0, 0, getWidth(), getHeight());
 
 	bDirty = true;
@@ -100,7 +100,7 @@ void ofxInterfaceEditor::update(float dt)
 	view.translate(0.5f*offset);
 
 	// can be optimized (calc only on change);
-	cache.lineNumbersWidth = getLineNumberWidth();
+	config.lineNumbersWidth = getLineNumberWidth();
 
 //	if (bDirty) {
 		renderToFbo(lastRender);
@@ -338,7 +338,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 	}
 	else if (key == OF_KEY_RETURN) {			// Enter
 		pushUndoState();
-		if (cache.bSpecialEnter) {
+		if (config.bSpecialEnter) {
 			if (state.caret.chr == textLines[state.caret.line].size()) {
 				// Enter at end of line
 				textLines.insert(textLines.begin()+state.caret.line+1, "");
@@ -404,24 +404,24 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofTranslate(fboPad/2, fboPad/2);
 	ofxNanoVG::one().applyOFMatrix();
 
-	if (cache.borderCorner>0.1) {
+	if (config.borderCorner>0.1) {
 		// Rounded corners
 		// draw background
-		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), cache.borderCorner, cache.bgColor);
+		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.bgColor);
 		// draw frame
-		ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), cache.borderCorner, cache.borderColor, cache.borderWidth);
+		ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.borderColor, config.borderWidth);
 	}
 	else {
 		// Sharp corners
 		// draw background
-		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), cache.bgColor);
+		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), config.bgColor);
 		// draw frame
-		ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), cache.borderColor, cache.borderWidth);
+		ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), config.borderColor, config.borderWidth);
 	}
 
 	// draw line numbers bar
-	if (cache.bLineNumbers) {
-		ofxNanoVG::one().fillRoundedRect(0.5*cache.borderWidth, 0.5*cache.borderWidth, cache.lineNumbersWidth, getHeight()-cache.borderWidth, cache.borderCorner, 0, 0, cache.borderCorner, cache.lineNumbersBGColor);
+	if (config.bLineNumbers) {
+		ofxNanoVG::one().fillRoundedRect(0.5*config.borderWidth, 0.5*config.borderWidth, config.lineNumbersWidth, getHeight()-config.borderWidth, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
 	}
 
 
@@ -429,30 +429,30 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	// DRAW TEXT
 	//////////////////////////////
 
-	ofxNanoVG::one().setFillColor(cache.fontColor);
-	float y=0.5*cache.borderWidth;
+	ofxNanoVG::one().setFillColor(config.fontColor);
+	float y=0.5*config.borderWidth;
 
 	// draw only visible part of text
 	double firstLine;
-	double frac = modf(view.y/cache.fontSize, &firstLine);
+	double frac = modf(view.y/config.fontSize, &firstLine);
 	// figure out first and last lines
 	caret_t first{(int)firstLine,0};
 	caret_t last = toCaret(ofVec2f(0, getHeight()));
-	ofxNanoVG::one().enableScissor(0.5*cache.borderWidth, 0.5*cache.borderWidth, getWidth()-cache.borderWidth, getHeight()-cache.borderWidth);
+	ofxNanoVG::one().enableScissor(0.5*config.borderWidth, 0.5*config.borderWidth, getWidth()-config.borderWidth, getHeight()-config.borderWidth);
 	ofPushMatrix();
-	ofTranslate(-view.x, -frac*cache.fontSize);
+	ofTranslate(-view.x, -frac*config.fontSize);
 	ofxNanoVG::one().applyOFMatrix();
 	for (int i=first.line; i<=last.line; i++) {
 		string& line = textLines[i];
-		if (cache.bLineNumbers) {
-			ofxNanoVG::one().setFillColor(cache.lineNumbersColor);
+		if (config.bLineNumbers) {
+			ofxNanoVG::one().setFillColor(config.lineNumbersColor);
 			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_TOP);
-			ofxNanoVG::one().drawText(font, 0.5*cache.borderWidth+cache.lineNumbersWidth, cache.pad.y+y, ofToString(i+1), cache.fontSize);
+			ofxNanoVG::one().drawText(font, 0.5*config.borderWidth+config.lineNumbersWidth, config.pad.y+y, ofToString(i+1), config.fontSize);
 		}
-		ofxNanoVG::one().setFillColor(cache.fontColor);
+		ofxNanoVG::one().setFillColor(config.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
-		ofxNanoVG::one().drawText(font, 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x, cache.pad.y+y, line, cache.fontSize);
-		y += cache.fontSize;
+		ofxNanoVG::one().drawText(font, 0.5*config.borderWidth+config.lineNumbersWidth+config.pad.x, config.pad.y+y, line, config.fontSize);
+		y += config.fontSize;
 	}
 
 	ofPopMatrix();
@@ -472,19 +472,19 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		ofVec2f sPos = toNode(sc);
 		ofVec2f ePos = toNode(ec);
 		if (sc.line == ec.line) {
-			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, cache.fontSize, cache.selectionColor);
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, config.selectionColor);
 		}
 		else {
-			float rightEdge = getWidth()-0.5*cache.borderWidth;
-			float leftEdge = 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x;
+			float rightEdge = getWidth()-0.5*config.borderWidth;
+			float leftEdge = 0.5*config.borderWidth+config.lineNumbersWidth+config.pad.x;
 			// first line
-			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, cache.fontSize, cache.selectionColor);
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, config.selectionColor);
 			for (int l=sc.line+1; l<ec.line; l++) {
 				ofVec2f lpos = toNode(l, 0);
-				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, cache.fontSize, cache.selectionColor);
+				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, config.fontSize, config.selectionColor);
 			}
 			// last line
-			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, cache.fontSize, cache.selectionColor);
+			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, config.fontSize, config.selectionColor);
 		}
 	}
 
@@ -496,7 +496,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	float val = cos(caretBlink);
 	if (val>0) {
 		ofSetColor(255);
-		ofxNanoVG::one().fillRect(cPos.x, cPos.y, 1, cache.fontSize, cache.fontColor);
+		ofxNanoVG::one().fillRect(cPos.x, cPos.y, 1, config.fontSize, config.fontColor);
 	}
 	
 	ofxNanoVG::one().disableScissor();
@@ -535,15 +535,15 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 		0
 	};
 
-	if (cache.bLineNumbers) {
-		p.x -= cache.lineNumbersWidth;
+	if (config.bLineNumbers) {
+		p.x -= config.lineNumbersWidth;
 	}
-	p.x -= cache.pad.x + 0.5*cache.borderWidth;
-	p.y -= cache.pad.y + 0.5*cache.borderWidth;
+	p.x -= config.pad.x + 0.5*config.borderWidth;
+	p.y -= config.pad.y + 0.5*config.borderWidth;
 	p.x += state.targetView.x;
 	p.y += state.targetView.y;
 
-	c.line = p.y/cache.fontSize;
+	c.line = p.y/config.fontSize;
 	if (c.line < 0) {
 		c.line = 0;
 	}
@@ -552,7 +552,7 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	}
 	string& line = textLines[c.line];
 
-	c.chr = (p.x+0.5*cache.letterSize.x)/cache.letterSize.x;
+	c.chr = (p.x+0.5*config.letterSize.x)/config.letterSize.x;
 	if (c.chr < 0) {
 		c.chr = 0;
 	}
@@ -569,14 +569,14 @@ ofVec2f ofxInterfaceEditor::toNode(const ofxInterfaceEditor::caret_t& _caret)
 
 ofVec2f ofxInterfaceEditor::toNode(int line, int chr)
 {
-	ofVec2f p(chr*cache.letterSize.x, line*cache.fontSize);
-	p.x += 0.5*cache.borderWidth+cache.pad.x;
-	p.y += 0.5*cache.borderWidth+cache.pad.y;
+	ofVec2f p(chr*config.letterSize.x, line*config.fontSize);
+	p.x += 0.5*config.borderWidth+config.pad.x;
+	p.y += 0.5*config.borderWidth+config.pad.y;
 	p.x -= state.targetView.x;
 	p.y -= state.targetView.y;
 
-	if (cache.bLineNumbers) {
-		p.x += cache.lineNumbersWidth;
+	if (config.bLineNumbers) {
+		p.x += config.lineNumbersWidth;
 	}
 
 	return p;
@@ -670,7 +670,7 @@ float ofxInterfaceEditor::getLineNumberWidth()
 	float w=0;
 	int linesNum = textLines.size();
 	while (linesNum>0) {
-		w += cache.letterSize.x;
+		w += config.letterSize.x;
 		linesNum/=10;
 	}
 
@@ -681,13 +681,13 @@ void ofxInterfaceEditor::refreshView()
 {
 	// Update view
 	ofVec2f cPos = toNode(state.caret);
-	while (cPos.y > getHeight()-0.5*cache.fontSize) {	// if caret goes outside of the view
-		state.targetView.y += cache.fontSize;				// advance one line
+	while (cPos.y > getHeight()-0.5*config.fontSize) {	// if caret goes outside of the view
+		state.targetView.y += config.fontSize;				// advance one line
 		cPos = toNode(state.caret);
 	}
 
 	while (cPos.y < 0) {
-		state.targetView.y -= cache.fontSize;
+		state.targetView.y -= config.fontSize;
 		if (state.targetView.y < 0) {
 			state.targetView.y = 0;
 		}
