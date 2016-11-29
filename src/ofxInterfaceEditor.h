@@ -21,13 +21,18 @@ public:
 	~ofxInterfaceEditor();
 	ofxInterfaceEditor();
 
-	void setConfig(const Json::Value& config);
-	void setText(const string& text);
-	string getText();
-	void loadTextFile(const string& file);
-	void keyPressed(int key);
-	void keyReleased(int key);
-	void addChar(char ch);
+	void loadConfig(const string& filename);	// load config from file
+	void setConfig(const Json::Value& config);	// set editor config object
+	void setText(const string& text);			// set editor text
+	string getText();							// get editor text
+	void loadFromFile(const string& filename);	// load text from file
+	void saveToFile(const string& filename);	// save text to file
+	void appendString(const string& str);		// add text to end of buffer
+	void appendChar(char ch);					// add char to end of buffer
+
+	void keyPressed(int key);	// use to pass keyboard events
+	void keyReleased(int key);	// use to pass keyboard events
+	void scroll(float amount);
 
 private:
 	Json::Value configJson;

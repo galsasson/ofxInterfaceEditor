@@ -18,23 +18,22 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 {
 	// default config
 	configJson = Json::objectValue;
-	configJson["width"] = 700;
-	configJson["lines"] = 20;
+	configJson["width"] = 80;		// in chars
+	configJson["lines"] = 20;		// in lines
 	configJson["pad"][0] = 6;
 	configJson["pad"][1] = 0;
 	configJson["background-color"] = "#222322 100%";
 	configJson["border-width"] = 2;
 	configJson["border-color"] = "#ffffff 100%";
-	configJson["border-corner"] = 10;
+	configJson["border-corner"] = 0;
 	configJson["font"] = "Inconsolata-Regular.ttf";
 	configJson["font-color"] = "#ffffff 100%";
-	configJson["font-size"] = 22;
+	configJson["font-size"] = 16;
 	configJson["line-numbers"] = true;
 	configJson["line-numbers-color"] = "#ffffff 100%";
 	configJson["line-numbers-bg-color"] = "#434445 100%";
 	configJson["selection-color"] = "#aaaaaa 50%";
 	configJson["special-enter"] = false;
-	configJson["initial-text"] = "Write here...";
 
 	// setup nanovg
 	ofxNanoVG::one().setup();
@@ -69,7 +68,7 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	}
 
 	// cache config value
-	config.width = ofxJsonParser::parseFloat(configJson["width"], 500);
+	config.width = ofxJsonParser::parseInt(configJson["width"], 80);
 	config.lines = ofxJsonParser::parseInt(configJson["lines"], 1);
 	config.borderWidth = ofxJsonParser::parseFloat(configJson["border-width"]);
 	config.borderCorner = ofxJsonParser::parseFloat(configJson["border-corner"]);
@@ -86,12 +85,25 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	config.letterSize = ofVec2f(lw, config.fontSize);
 	config.bSpecialEnter = ofxJsonParser::parseBool(configJson["special-enter"]);
 
-
 	// set size
-	setSize(config.width, config.fontSize*config.lines+config.borderWidth);
+	setSize((config.width+5)*lw, config.fontSize*config.lines+config.borderWidth);
 	state.targetView = view = ofRectangle(0, 0, getWidth(), getHeight());
 
 	bDirty = true;
+}
+
+void ofxInterfaceEditor::loadConfig(const string& filename)
+{
+	if (!ofFile(filename).exists()) {
+		ofLogError("ofxInterfaceEditor") << "could not find the config file: "<<filename;
+		return;
+	}
+	ofxJSONElement json;
+	if (!json.open(filename)) {
+		ofLogError("ofxInterfaceEditor") << "could not parse the config file: "<<filename;
+		return;
+	}
+	setConfig(json);
 }
 
 void ofxInterfaceEditor::update(float dt)
@@ -117,6 +129,7 @@ void ofxInterfaceEditor::draw()
 
 void ofxInterfaceEditor::setText(const string &text)
 {
+	pushUndoState();
 	textLines = ofSplitString(text, "\n", false, false);
 	if (textLines.empty()) {
 		textLines.push_back("");
@@ -141,7 +154,7 @@ string ofxInterfaceEditor::getText()
 	return str;
 }
 
-void ofxInterfaceEditor::loadTextFile(const string &filename)
+void ofxInterfaceEditor::loadFromFile(const string &filename)
 {
 	ofFile file(filename);
 	if (!file.exists()) {
@@ -152,10 +165,35 @@ void ofxInterfaceEditor::loadTextFile(const string &filename)
 	setText(file.readToBuffer().getText());
 }
 
+void ofxInterfaceEditor::saveToFile(const string &filename)
+{
+	ofFile file(filename, ofFile::WriteOnly);
+	ofBuffer buffer;
+	buffer.set(getText());
+	file.writeFromBuffer(buffer);
+}
+
+void ofxInterfaceEditor::appendString(const string &str)
+{
+	string text = getText();
+	size_t cPos = toTextPos(state.caret);
+	bool caretAtEnd = cPos==text.size();
+	setText(getText()+str);
+	if (caretAtEnd) {
+		state.caret = toCaret(cPos+str.size());
+	}
+}
+
+void ofxInterfaceEditor::appendChar(char ch)
+{
+	string str;
+	str += ch;
+	appendString(str);
+}
+
 void ofxInterfaceEditor::keyPressed(int key)
 {
-	ofLog() << "Key Pressed = "<<key;
-
+//	ofLog() << "Key Pressed = "<<key;
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
 		if (!state.selection.active) {
@@ -368,8 +406,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 
 void ofxInterfaceEditor::keyReleased(int key)
 {
-	ofLog() << "Key Released = "<<key;
-
+//	ofLog() << "Key Released = "<<key;
 	switch (key) {
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
@@ -384,7 +421,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 	}
 }
 
-void ofxInterfaceEditor::addChar(char ch)
+void ofxInterfaceEditor::scroll(float amount)
 {
 
 }
@@ -405,32 +442,44 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofxNanoVG::one().applyOFMatrix();
 
 	//////////////////////////////
+	// DRAW BACKGROUND
+	//////////////////////////////
+
+	if (config.borderCorner>0.1) {
+		// Rounded corners
+		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.bgColor);
+	}
+	else {
+		// Sharp corners
+		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), config.bgColor);
+	}
+
+	//////////////////////////////
+	// DRAW LINE NUMBERS BAR
+	//////////////////////////////
+
+	// draw line numbers bar
+	if (config.bLineNumbers) {
+		if (config.borderCorner>0.1) {
+			ofxNanoVG::one().fillRoundedRect(0, 0, config.lineNumbersWidth, getHeight(), config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+		}
+		else {
+			ofxNanoVG::one().fillRect(0, 0, config.lineNumbersWidth, getHeight(), config.lineNumbersBGColor);
+		}
+	}
+
+
+	//////////////////////////////
 	// DRAW FRAME
 	//////////////////////////////
 
 	if (config.borderCorner>0.1) {
 		// Rounded corners
-		// draw background
-		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.bgColor);
-		// draw frame
 		ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.borderColor, config.borderWidth);
 	}
 	else {
 		// Sharp corners
-		// draw background
-		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), config.bgColor);
-		// draw frame
 		ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), config.borderColor, config.borderWidth);
-	}
-
-	// draw line numbers bar
-	if (config.bLineNumbers) {
-		if (config.borderCorner>0.1) {
-		ofxNanoVG::one().fillRoundedRect(0.5*config.borderWidth, 0.5*config.borderWidth, config.lineNumbersWidth, getHeight()-config.borderWidth, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
-		}
-		else {
-			ofxNanoVG::one().fillRect(0.5*config.borderWidth, 0.5*config.borderWidth, config.lineNumbersWidth, getHeight()-config.borderWidth, config.lineNumbersBGColor);
-		}
 	}
 
 	//////////////////////////////
@@ -454,8 +503,8 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		string& line = textLines[i];
 		if (config.bLineNumbers) {
 			ofxNanoVG::one().setFillColor(config.lineNumbersColor);
-			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_TOP);
-			ofxNanoVG::one().drawText(font, 0.5*config.borderWidth+config.lineNumbersWidth, config.pad.y+y, ofToString(i+1), config.fontSize);
+			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_MIDDLE);
+			ofxNanoVG::one().drawText(font, config.lineNumbersWidth, config.pad.y+y+0.5*config.fontSize, ofToString(i+1), 0.8*config.fontSize);
 		}
 		ofxNanoVG::one().setFillColor(config.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
@@ -500,13 +549,14 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	// DRAW SCROLL BARS
 	///////////////////////////////
 
-	float barStartY = config.borderCorner;
+	// Vertical scroll bar
+	float barStartY = config.borderCorner+4;
 	float totalTextHeight = textLines.size()*config.fontSize;
-	float totalBarHeight = getHeight()-config.borderCorner*2;
+	float totalBarHeight = getHeight()-barStartY*2;
 	float linesToHeightFactor = totalBarHeight / totalTextHeight;
 	float fly = barStartY+view.y*linesToHeightFactor;
 	float lly = barStartY+(view.y+view.height)*linesToHeightFactor;
-	lly = ofClamp(lly, 0, getHeight()-config.borderCorner);
+	lly = ofClamp(lly, 0, barStartY+totalBarHeight);
 	ofxNanoVG::one().fillRect(getWidth()-0.5*config.borderWidth-4, fly, 2, lly-fly, config.borderColor);
 
 	///////////////////////////////

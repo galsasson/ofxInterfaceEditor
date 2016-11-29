@@ -1,0 +1,9 @@
+#include <iostream>
+#incldue <regex>
+
+using namespace std;
+
+cout<<"Hello text editor!"<<endl;
+
+
+

@@ -25,6 +25,9 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+	void onLoadClicked(ofxInterface::TouchEvent& event);
+	void onSaveClicked(ofxInterface::TouchEvent& event);
+
 	Node scene;
 	ofxInterfaceEditor editor;
 	bool bDebug;
