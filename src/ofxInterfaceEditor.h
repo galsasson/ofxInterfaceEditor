@@ -83,6 +83,7 @@ private:
 		ofRectangle targetView;			// for animated scroll
 	} state;
 	stack<editor_state_t> undoStates;
+	stack<editor_state_t> redoStates;
 
 	void renderToFbo(ofFbo& fbo);
 	void allocateFbo(ofFbo& fbo);
@@ -100,6 +101,8 @@ private:
 	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);
 	void pushUndoState();
 	void popUndoState();
+	void pushRedoState();
+	void popRedoState();
 };
 
 #endif /* ofxInterfaceEditor_h */
