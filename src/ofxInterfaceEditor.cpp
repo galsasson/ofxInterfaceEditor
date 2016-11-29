@@ -18,19 +18,21 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 {
 	// default config
 	config = Json::objectValue;
-	config["width"] = 1300;
+	config["width"] = 700;
 	config["lines"] = 20;
 	config["pad"][0] = 6;
 	config["pad"][1] = 0;
-	config["background-color"] = "#111213 100%";
-	config["border-width"] = 4;
+	config["background-color"] = "#222322 100%";
+	config["border-width"] = 2;
 	config["border-color"] = "#ffffff 100%";
 	config["border-corner"] = 10;
 	config["font"] = "Inconsolata-Regular.ttf";
 	config["font-color"] = "#ffffff 100%";
-	config["font-size"] = 40;
+	config["font-size"] = 22;
 	config["line-numbers"] = true;
-	config["selection-color"] = "#aaaaaa 100%";
+	config["line-numbers-color"] = "#ffffff 100%";
+	config["line-numbers-bg-color"] = "#434445 100%";
+	config["selection-color"] = "#aaaaaa 50%";
 	config["special-enter"] = false;
 	config["initial-text"] = "Write here...";
 
@@ -46,11 +48,11 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	fboPad =			256;
 	bDirty =			false;
 	font =				NULL;
-	caret.line =		0;
-	caret.chr =			0;
+	state.caret.line =	0;
+	state.caret.chr =	0;
 	caretBlink =		0;
 	bShiftPressed = false;
-	view = targetView =	ofRectangle(0, 0, 0, 0);
+	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
 	loadConfig(config);
@@ -70,9 +72,12 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 	cache.width = ofxJsonParser::parseFloat(config["width"], 500);
 	cache.lines = ofxJsonParser::parseInt(config["lines"], 1);
 	cache.borderWidth = ofxJsonParser::parseFloat(config["border-width"]);
+	cache.borderCorner = ofxJsonParser::parseFloat(config["border-corner"]);
 	cache.fontSize = ofxJsonParser::parseFloat(config["font-size"]);
 	cache.pad = ofxJsonParser::parseVector(config["pad"]);
 	cache.bLineNumbers = ofxJsonParser::parseBool(config["line-numbers"]);
+	cache.lineNumbersColor = ofxJsonParser::parseColor(config["line-numbers-color"]);
+	cache.lineNumbersBGColor = ofxJsonParser::parseColor(config["line-numbers-bg-color"]);
 	cache.fontColor = ofxJsonParser::parseColor(config["font-color"]);
 	cache.bgColor = ofxJsonParser::parseColor(config["background-color"]);
 	cache.borderColor = ofxJsonParser::parseColor(config["border-color"]);
@@ -91,7 +96,7 @@ void ofxInterfaceEditor::loadConfig(const Json::Value& conf)
 
 void ofxInterfaceEditor::update(float dt)
 {
-	ofVec2f offset = (targetView.getPosition()-view.getPosition());
+	ofVec2f offset = (state.targetView.getPosition()-view.getPosition());
 	view.translate(0.5f*offset);
 
 	// can be optimized (calc only on change);
@@ -106,47 +111,8 @@ void ofxInterfaceEditor::update(float dt)
 
 void ofxInterfaceEditor::draw()
 {
-	ofSetColor(cache.bgColor);
-	ofDrawRectangle(0, 0, getWidth(), getHeight());
-
-	if (selection.active) {
-		// draw selection
-		ofSetColor(cache.selectionColor);
-		caret_t sc = selection.begin;
-		caret_t	ec = selection.end;
-		if (sc.line > ec.line) {
-			std::swap(sc, ec);
-		}
-		ofVec2f sPos = toNode(sc);
-		ofVec2f ePos = toNode(ec);
-		if (sc.line == ec.line) {
-			ofDrawRectangle(sPos.x, sPos.y, ePos.x-sPos.x, cache.fontSize);
-		}
-		else {
-			float rightEdge = getWidth()-0.5*cache.borderWidth;
-			float leftEdge = 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x;
-			// first line
-			ofDrawRectangle(sPos.x, sPos.y, rightEdge-sPos.x, cache.fontSize);
-			for (int l=sc.line+1; l<ec.line; l++) {
-				ofVec2f lpos = toNode(l, 0);
-				ofDrawRectangle(leftEdge, lpos.y, rightEdge-leftEdge, cache.fontSize);
-			}
-			// last line
-			ofDrawRectangle(leftEdge, ePos.y, ePos.x-leftEdge, cache.fontSize);
-		}
-	}
-
-	// draw caret
-	ofVec2f cPos = toNode(caret);
-	float val = cos(caretBlink);
-	if (val>0) {
-		ofSetColor(255);
-		ofDrawRectangle(cPos.x, cPos.y, 1, cache.fontSize);
-	}
-
 	ofSetColor(255);
 	lastRender.draw(-fboPad/2, -fboPad/2);
-
 }
 
 void ofxInterfaceEditor::setText(const string &text)
@@ -155,8 +121,12 @@ void ofxInterfaceEditor::setText(const string &text)
 	if (textLines.empty()) {
 		textLines.push_back("");
 	}
-	caret = caret_t{0,0};
-	targetView = ofRectangle(0, 0, getWidth(), getHeight());
+
+	// clamp caret
+	state.caret.line = state.caret.line<0?0:state.caret.line>textLines.size()-1?textLines.size()-1:state.caret.line;
+	state.caret.chr = state.caret.chr<0?0:state.caret.chr>textLines[state.caret.line].length()?textLines[state.caret.line].length():state.caret.chr;
+
+	refreshView();
 }
 
 string ofxInterfaceEditor::getText()
@@ -184,10 +154,12 @@ void ofxInterfaceEditor::loadTextFile(const string &filename)
 
 void ofxInterfaceEditor::keyPressed(int key)
 {
+	ofLog() << "Key Pressed = "<<key;
+
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
-		if (!selection.active) {
-			selection.begin = caret;
+		if (!state.selection.active) {
+			state.selection.begin = state.caret;
 		}
 	}
 	else if (key == OF_KEY_COMMAND) {
@@ -199,176 +171,194 @@ void ofxInterfaceEditor::keyPressed(int key)
 	else if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
 		switch (key) {
 			case OF_KEY_LEFT:
-				caret.chr--;
-				if (caret.chr < 0) {
-					if (caret.line>0) {
-						caret.line--;
-						caret.chr = textLines[caret.line].size();
+				state.caret.chr--;
+				if (state.caret.chr < 0) {
+					if (state.caret.line>0) {
+						state.caret.line--;
+						state.caret.chr = textLines[state.caret.line].size();
 					}
 				}
 				break;
 			case OF_KEY_UP:
-				caret.line--;
+				state.caret.line--;
 				break;
 			case OF_KEY_RIGHT:
-				caret.chr++;
-				if (caret.chr > textLines[caret.line].size()) {
-					if (caret.line < textLines.size()-1) {
-						caret.chr=0;
-						caret.line++;
+				state.caret.chr++;
+				if (state.caret.chr > textLines[state.caret.line].size()) {
+					if (state.caret.line < textLines.size()-1) {
+						state.caret.chr=0;
+						state.caret.line++;
 					}
 				}
 				break;
 			case OF_KEY_DOWN:
-				caret.line++;
+				state.caret.line++;
 				break;
 			case OF_KEY_HOME:
-				caret.chr = 0;
+				state.caret.chr = 0;
 				break;
 			case OF_KEY_END:
-				caret.chr = textLines[caret.line].size();
+				state.caret.chr = textLines[state.caret.line].size();
 				break;
 		}
 		// clamp caret
-		caret.line = caret.line<0?0:caret.line>textLines.size()-1?textLines.size()-1:caret.line;
-		caret.chr = caret.chr<0?0:caret.chr>textLines[caret.line].length()?textLines[caret.line].length():caret.chr;
+		state.caret.line = state.caret.line<0?0:state.caret.line>textLines.size()-1?textLines.size()-1:state.caret.line;
+		state.caret.chr = state.caret.chr<0?0:state.caret.chr>textLines[state.caret.line].length()?textLines[state.caret.line].length():state.caret.chr;
 
 		if (bShiftPressed) {
-			selection.end = caret;
-			selection.active = true;
-			ofLogVerbose() << "bShiftPressed==true";
+			state.selection.end = state.caret;
+			state.selection.active = true;
 		}
 		else {
-			selection.active = false;
-			ofLogVerbose() << "bShiftPressed==false";
+			state.selection.active = false;
 		}
 	}
-	else if (key >= 32 && key <= 126) {
-		if (bControlKeyPressed || bCommandKeyPressed) {
-			// command/control with character
-			if (key == 'x') {					// Cut
-				if (selection.active) {
+	else if (bControlKeyPressed || bCommandKeyPressed) {
+		// Special commands
+		key += bControlKeyPressed?32:96;
+		// command/control with character
+		if (key == 'x') {					// Cut
+			if (state.selection.active) {
+				string str = getText();
+				caret_t sb = state.selection.begin;
+				caret_t se = state.selection.end;
+				if (((sb.line == se.line) && (sb.chr > se.chr)) ||
+					sb.line > se.line) {
+					swap(sb, se);
+				}
+				size_t bpos = toTextPos(sb);
+				size_t size = toTextPos(se)-bpos;
+				pasteboard = str.substr(bpos, size);
+				str.erase(bpos, size);
+				setText(str);
+				state.selection.active = false;
+				state.caret = sb;
+			}
+		}
+		else if (key == 'c') {				// Copy
+			if (state.selection.active) {
+				pasteboard = getSelectedText();
+			}
+			else {
+				pasteboard = textLines[state.caret.line] + "\n";
+			}
+		}
+		else if (key == 'v') {				// Paste
+			if (pasteboard.size()>0) {
+				if (state.selection.active) {
+					// paste in selection place
 					string str = getText();
-					caret_t sb = selection.begin;
-					caret_t se = selection.end;
+					caret_t sb = state.selection.begin;
+					caret_t se = state.selection.end;
 					if (((sb.line == se.line) && (sb.chr > se.chr)) ||
 						sb.line > se.line) {
 						swap(sb, se);
 					}
 					size_t bpos = toTextPos(sb);
 					size_t epos = toTextPos(se);
-					pasteboard = str.substr(bpos, epos);
-					str.erase(bpos, epos);
-					setText(str);
+					stringstream newstr;
+					newstr << str.substr(0, bpos);
+					newstr << pasteboard;
+					newstr << str.substr(epos, str.size()-epos);
+					setText(newstr.str());
+					state.caret = toCaret(bpos+pasteboard.size());
+					state.selection.begin = toCaret(bpos);
+					state.selection.end = toCaret(bpos+pasteboard.size());
 				}
-			}
-			else if (key == 'c') {				// Copy
-
-			}
-			else if (key == 'v') {				// Paste
-				if (pasteboard.size()>0) {
+				else {
+					// paste in caret position
 					string str = getText();
-					size_t cpos = toTextPos(caret);
+					size_t cpos = toTextPos(state.caret);
 					stringstream newText;
 					newText << str.substr(0, cpos);
 					newText << pasteboard;
-					newText << str.substr(cpos, str.size());
+					newText << str.substr(cpos, str.size()-cpos);
 					setText(newText.str());
+					state.caret = toCaret(cpos+pasteboard.size());
 				}
-
-			}
-			else if (key == 'z') {				// Undo
-
 			}
 		}
-		else {
-			// This is normal letter typing
-			if (selection.active) {
-				clearSelection();
-			}
-			textLines[caret.line].insert(caret.chr, ofToString((char)key));
-			caret.chr++;
+		else if (key == 'z') {				// Undo
+			
 		}
 	}
-	else if (key == OF_KEY_BACKSPACE) {			// Delete
-		if (selection.active) {
+	else if (key >= 32 && key <= 126) {
+		// This is normal letter typing
+		if (state.selection.active) {
 			clearSelection();
 		}
-		else if (caret.chr>0) {
-			textLines[caret.line].erase(textLines[caret.line].begin()+caret.chr-1);
-			caret.chr--;
+		textLines[state.caret.line].insert(state.caret.chr, ofToString((char)key));
+		state.caret.chr++;
+	}
+	else if (key == OF_KEY_BACKSPACE) {			// Delete
+		if (state.selection.active) {
+			clearSelection();
 		}
-		else if (caret.line > 0) {
-			int chr = textLines[caret.line-1].size();
+		else if (state.caret.chr>0) {
+			textLines[state.caret.line].erase(textLines[state.caret.line].begin()+state.caret.chr-1);
+			state.caret.chr--;
+		}
+		else if (state.caret.line > 0) {
+			int chr = textLines[state.caret.line-1].size();
 			// append this line to previous
-			textLines[caret.line-1].append(textLines[caret.line]);
+			textLines[state.caret.line-1].append(textLines[state.caret.line]);
 			// remove this line
-			textLines.erase(textLines.begin()+caret.line);
-			caret.line--;
-			caret.chr = chr;
+			textLines.erase(textLines.begin()+state.caret.line);
+			state.caret.line--;
+			state.caret.chr = chr;
 		}
 	}
 	else if (key == OF_KEY_DEL) {
-		if (selection.active) {
+		if (state.selection.active) {
 			clearSelection();
 		}
 		else {
-			if (textLines[caret.line].size() == caret.chr) {
+			if (textLines[state.caret.line].size() == state.caret.chr) {
 				// delete at end of line
-				if (caret.line < textLines.size()-1) {
-					textLines[caret.line].append(textLines[caret.line+1]);
-					textLines.erase(textLines.begin()+caret.line+1);
+				if (state.caret.line < textLines.size()-1) {
+					textLines[state.caret.line].append(textLines[state.caret.line+1]);
+					textLines.erase(textLines.begin()+state.caret.line+1);
 				}
 			}
 			else {
 				// delete anywhere else
-				textLines[caret.line].erase(caret.chr, 1);
+				textLines[state.caret.line].erase(state.caret.chr, 1);
 			}
 		}
 	}
 	else if (key == OF_KEY_RETURN) {			// Enter
 		if (cache.bSpecialEnter) {
-			if (caret.chr == textLines[caret.line].size()) {
+			if (state.caret.chr == textLines[state.caret.line].size()) {
 				// Enter at end of line
-				textLines.insert(textLines.begin()+caret.line+1, "");
-				caret.line++;
-				caret.chr=0;
+				textLines.insert(textLines.begin()+state.caret.line+1, "");
+				state.caret.line++;
+				state.caret.chr=0;
 			}
 			else {
 				// Enter in middle of line
 			}
 		}
 		else {
-			if (selection.active) {
+			if (state.selection.active) {
 				clearSelection();
 			}
 			// Normal enter behavior
-			string afterCaret = textLines[caret.line].substr(caret.chr, textLines[caret.line].size());
-			textLines[caret.line].erase(caret.chr, textLines[caret.line].size()-caret.chr);
-			textLines.insert(textLines.begin()+caret.line+1, afterCaret);
-			caret.line++;
-			caret.chr=0;
+			string afterCaret = textLines[state.caret.line].substr(state.caret.chr, textLines[state.caret.line].size());
+			textLines[state.caret.line].erase(state.caret.chr, textLines[state.caret.line].size()-state.caret.chr);
+			textLines.insert(textLines.begin()+state.caret.line+1, afterCaret);
+			state.caret.line++;
+			state.caret.chr=0;
 		}
 	}
 
-	// Update view
-	ofVec2f cPos = toNode(caret);
-	if (cPos.y > getHeight()-0.5*cache.fontSize) {	// if caret goes outside of the view
-		targetView.y += cache.fontSize;				// advance one line
-	}
-	else if (cPos.y < 0) {
-		targetView.y -= cache.fontSize;
-		if (targetView.y < 0) {
-			targetView.y = 0;
-		}
-	}
-
+	refreshView();
 	caretBlink=0;
-
 }
 
 void ofxInterfaceEditor::keyReleased(int key)
 {
+	ofLog() << "Key Released = "<<key;
+
 	switch (key) {
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
@@ -403,16 +393,33 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofTranslate(fboPad/2, fboPad/2);
 	ofxNanoVG::one().applyOFMatrix();
 
-	// draw frame
-	ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), cache.borderColor, cache.borderWidth);
+	if (cache.borderCorner>0.1) {
+		// Rounded corners
+		// draw background
+		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), cache.borderCorner, cache.bgColor);
+		// draw frame
+		ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), cache.borderCorner, cache.borderColor, cache.borderWidth);
+	}
+	else {
+		// Sharp corners
+		// draw background
+		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), cache.bgColor);
+		// draw frame
+		ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), cache.borderColor, cache.borderWidth);
+	}
 
-	// draw text
+	// draw line numbers bar
+	if (cache.bLineNumbers) {
+		ofxNanoVG::one().fillRoundedRect(0.5*cache.borderWidth, 0.5*cache.borderWidth, cache.lineNumbersWidth, getHeight()-cache.borderWidth, cache.borderCorner, 0, 0, cache.borderCorner, cache.lineNumbersBGColor);
+	}
+
+
+	//////////////////////////////
+	// DRAW TEXT
+	//////////////////////////////
+
 	ofxNanoVG::one().setFillColor(cache.fontColor);
 	float y=0.5*cache.borderWidth;
-
-	if (cache.bLineNumbers) {
-		ofxNanoVG::one().fillRect(0.5*cache.borderWidth, 0.5*cache.borderWidth, cache.lineNumbersWidth, getHeight()-cache.borderWidth, ofColor(55, 56, 57));
-	}
 
 	// draw only visible part of text
 	double firstLine;
@@ -420,19 +427,67 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	// figure out first and last lines
 	caret_t first{(int)firstLine,0};
 	caret_t last = toCaret(ofVec2f(0, getHeight()));
-	ofxNanoVG::one().setFillColor(cache.fontColor);
 	ofxNanoVG::one().enableScissor(0.5*cache.borderWidth, 0.5*cache.borderWidth, getWidth()-cache.borderWidth, getHeight()-cache.borderWidth);
-	ofxNanoVG::one().translateMatrix(-view.x, -frac*cache.fontSize);
+	ofPushMatrix();
+	ofTranslate(-view.x, -frac*cache.fontSize);
+	ofxNanoVG::one().applyOFMatrix();
 	for (int i=first.line; i<=last.line; i++) {
 		string& line = textLines[i];
 		if (cache.bLineNumbers) {
+			ofxNanoVG::one().setFillColor(cache.lineNumbersColor);
 			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_TOP);
 			ofxNanoVG::one().drawText(font, 0.5*cache.borderWidth+cache.lineNumbersWidth, cache.pad.y+y, ofToString(i+1), cache.fontSize);
 		}
+		ofxNanoVG::one().setFillColor(cache.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
 		ofxNanoVG::one().drawText(font, 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x, cache.pad.y+y, line, cache.fontSize);
 		y += cache.fontSize;
 	}
+
+	ofPopMatrix();
+	ofxNanoVG::one().applyOFMatrix();
+
+	///////////////////////////////
+	// DRAW SELECTION
+	///////////////////////////////
+
+	if (state.selection.active) {
+		// draw selection
+		caret_t sc = state.selection.begin;
+		caret_t	ec = state.selection.end;
+		if (sc.line > ec.line) {
+			std::swap(sc, ec);
+		}
+		ofVec2f sPos = toNode(sc);
+		ofVec2f ePos = toNode(ec);
+		if (sc.line == ec.line) {
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, cache.fontSize, cache.selectionColor);
+		}
+		else {
+			float rightEdge = getWidth()-0.5*cache.borderWidth;
+			float leftEdge = 0.5*cache.borderWidth+cache.lineNumbersWidth+cache.pad.x;
+			// first line
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, cache.fontSize, cache.selectionColor);
+			for (int l=sc.line+1; l<ec.line; l++) {
+				ofVec2f lpos = toNode(l, 0);
+				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, cache.fontSize, cache.selectionColor);
+			}
+			// last line
+			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, cache.fontSize, cache.selectionColor);
+		}
+	}
+
+	///////////////////////////////
+	// DRAW CARET
+	///////////////////////////////
+
+	ofVec2f cPos = toNode(state.caret);
+	float val = cos(caretBlink);
+	if (val>0) {
+		ofSetColor(255);
+		ofxNanoVG::one().fillRect(cPos.x, cPos.y, 1, cache.fontSize, cache.fontColor);
+	}
+	
 	ofxNanoVG::one().disableScissor();
 
 	ofxNanoVG::one().endFrame();
@@ -474,8 +529,8 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	}
 	p.x -= cache.pad.x + 0.5*cache.borderWidth;
 	p.y -= cache.pad.y + 0.5*cache.borderWidth;
-	p.x += targetView.x;
-	p.y += targetView.y;
+	p.x += state.targetView.x;
+	p.y += state.targetView.y;
 
 	c.line = p.y/cache.fontSize;
 	if (c.line < 0) {
@@ -506,8 +561,8 @@ ofVec2f ofxInterfaceEditor::toNode(int line, int chr)
 	ofVec2f p(chr*cache.letterSize.x, line*cache.fontSize);
 	p.x += 0.5*cache.borderWidth+cache.pad.x;
 	p.y += 0.5*cache.borderWidth+cache.pad.y;
-	p.x -= targetView.x;
-	p.y -= targetView.y;
+	p.x -= state.targetView.x;
+	p.y -= state.targetView.y;
 
 	if (cache.bLineNumbers) {
 		p.x += cache.lineNumbersWidth;
@@ -529,9 +584,16 @@ size_t ofxInterfaceEditor::toTextPos(const caret_t& c)
 ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 {
 	caret_t c{0,0};
-	while (textPos>0) {
-		if (textLines[c.line].size()>textPos) {
-			// TODO: finish this function
+	while (textPos>0 && textLines.size()>c.line) {
+		if (textLines[c.line].size() < textPos) {
+			// textPos is beyond this line
+			textPos -= textLines[c.line].size()+1;
+			c.line++;
+		}
+		else {
+			// text pos is in this line
+			c.chr = textPos;
+			break;
 		}
 	}
 	return c;
@@ -540,29 +602,30 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
-	selection.begin = selection.end = caret = toCaret(local);
-	selection.active = false;
+	state.selection.begin = state.selection.end = state.caret = toCaret(local);
+	state.selection.active = false;
 	caretBlink = 0;
 }
 
 void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
 {
-	selection.end = toCaret(toLocal(event.position));
-	selection.active = true;
+	state.selection.end = toCaret(toLocal(event.position));
+	state.selection.active = true;
 }
 
 void ofxInterfaceEditor::onTouchUp(TouchEvent& event)
 {
-	if (selection.begin.chr == selection.end.chr &&
-		selection.begin.line == selection.end.line) {
-		selection.active = false;
+	if (state.selection.begin.chr == state.selection.end.chr &&
+		state.selection.begin.line == state.selection.end.line) {
+		state.selection.active = false;
 	}
 }
 
 void ofxInterfaceEditor::clearSelection()
 {
-	caret_t sc = selection.begin;
-	caret_t	ec = selection.end;
+	caret_t sc = state.selection.begin;
+	caret_t	ec = state.selection.end;
+
 	if (sc.line == ec.line) {
 		if (sc.chr > ec.chr) {
 			std::swap(sc, ec);
@@ -586,8 +649,9 @@ void ofxInterfaceEditor::clearSelection()
 			textLines.erase(textLines.begin()+l);
 		}
 	}
-	caret = sc;
-	selection.active = false;
+
+	state.caret = sc;
+	state.selection.active = false;
 }
 
 float ofxInterfaceEditor::getLineNumberWidth()
@@ -602,4 +666,45 @@ float ofxInterfaceEditor::getLineNumberWidth()
 	return w;
 }
 
+void ofxInterfaceEditor::refreshView()
+{
+	// Update view
+	ofVec2f cPos = toNode(state.caret);
+	while (cPos.y > getHeight()-0.5*cache.fontSize) {	// if caret goes outside of the view
+		state.targetView.y += cache.fontSize;				// advance one line
+		cPos = toNode(state.caret);
+	}
+
+	while (cPos.y < 0) {
+		state.targetView.y -= cache.fontSize;
+		if (state.targetView.y < 0) {
+			state.targetView.y = 0;
+		}
+		cPos = toNode(state.caret);
+	}
+}
+
+string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
+{
+	if (!state.selection.active) {
+		return "";
+	}
+
+	string str = getText();
+	caret_t sb = state.selection.begin;
+	caret_t se = state.selection.end;
+	if (((sb.line == se.line) && (sb.chr > se.chr)) ||
+		sb.line > se.line) {
+		swap(sb, se);
+	}
+	size_t bpos = toTextPos(sb);
+	size_t epos = toTextPos(se);
+	if (_bpos != NULL) {
+		*_bpos = bpos;
+	}
+	if (_epos != NULL) {
+		*_epos = epos;
+	}
+	return str.substr(bpos, epos-bpos);
+}
 

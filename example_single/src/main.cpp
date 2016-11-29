@@ -4,8 +4,8 @@
 //========================================================================
 int main( ){
 	ofGLFWWindowSettings s;
-	s.width = 1500;
-	s.height = 900;
+	s.width = 800;
+	s.height = 600;
 	s.numSamples = 0;
 	s.doubleBuffering = true;
 	s.depthBits = 24;
