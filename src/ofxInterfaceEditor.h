@@ -21,10 +21,7 @@ public:
 	~ofxInterfaceEditor();
 	ofxInterfaceEditor();
 
-	void loadConfig(const Json::Value& config);
-	void update(float dt);
-	void draw();
-
+	void setConfig(const Json::Value& config);
 	void setText(const string& text);
 	string getText();
 	void loadTextFile(const string& file);
@@ -33,7 +30,7 @@ public:
 	void addChar(char ch);
 
 private:
-	Json::Value config;
+	Json::Value configJson;
 	ofFbo lastRender;
 	vector<string> textLines;
 	bool bDirty;
@@ -68,7 +65,7 @@ private:
 		ofColor lineNumbersBGColor;
 		ofVec2f letterSize;
 		bool bSpecialEnter;
-	} cache;
+	} config;
 
 	struct selection_t {
 		caret_t begin;
@@ -81,9 +78,12 @@ private:
 		caret_t caret;
 		selection_t selection;
 		ofRectangle targetView;			// for animated scroll
-	} state;
-	stack<editor_state_t> undoStates;
-	stack<editor_state_t> redoStates;
+	} state;							// current state
+	stack<editor_state_t> undoStates;	// undo states
+	stack<editor_state_t> redoStates;	// redos states
+
+	void update(float dt);
+	void draw();
 
 	void renderToFbo(ofFbo& fbo);
 	void allocateFbo(ofFbo& fbo);
