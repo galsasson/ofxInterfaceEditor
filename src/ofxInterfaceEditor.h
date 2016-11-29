@@ -40,22 +40,22 @@ private:
 	int fboPad;
 	ofxNanoVG::Font* font;
 	ofRectangle view;
-	ofRectangle targetView;		// for animated scroll
 	bool bShiftPressed;
 	bool bCommandKeyPressed;
 	bool bControlKeyPressed;
 	string pasteboard;
+	float caretBlink;
 
 	struct caret_t {
 		int line;
 		int chr;
-	} caret;
-	float caretBlink;
+	};
 
 	struct configcache_t {
 		float width;
 		int lines;
 		float borderWidth;
+		float borderCorner;
 		float fontSize;
 		ofVec2f pad;
 		bool bLineNumbers;
@@ -64,6 +64,8 @@ private:
 		ofColor bgColor;
 		ofColor borderColor;
 		ofColor selectionColor;
+		ofColor lineNumbersColor;
+		ofColor lineNumbersBGColor;
 		ofVec2f letterSize;
 		bool bSpecialEnter;
 	} cache;
@@ -72,7 +74,15 @@ private:
 		caret_t begin;
 		caret_t end;
 		bool active;
-	} selection;
+	};
+
+	struct editor_state_t {
+		string text;
+		caret_t caret;
+		selection_t selection;
+		ofRectangle targetView;			// for animated scroll
+	} state;
+	stack<editor_state_t> undoStates;
 
 	void renderToFbo(ofFbo& fbo);
 	void allocateFbo(ofFbo& fbo);
@@ -86,6 +96,10 @@ private:
 	void onTouchUp(TouchEvent& event);
 	void clearSelection();
 	float getLineNumberWidth();
+	void refreshView();
+	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);
+	void pushUndoState();
+	void popUndoState();
 };
 
 #endif /* ofxInterfaceEditor_h */
