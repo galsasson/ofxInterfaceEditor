@@ -48,6 +48,7 @@ private:
 	bool bControlKeyPressed;
 	string pasteboard;
 	float caretBlink;
+	bool bInDrag;
 
 	struct caret_t {
 		int line;
@@ -71,6 +72,11 @@ private:
 		ofColor lineNumbersBGColor;
 		ofVec2f letterSize;
 		bool bSpecialEnter;
+		bool bDraggable;
+		bool bTitle;
+		string titleString;
+		float titleBarHeight;
+		ofColor titleColor;
 	} config;
 
 	struct selection_t {
@@ -88,8 +94,10 @@ private:
 	stack<editor_state_t> undoStates;	// undo states
 	stack<editor_state_t> redoStates;	// redos states
 
-	void update(float dt);
-	void draw();
+	// Node orerrides
+	void update(float dt) override;
+	void draw() override;
+	bool contains(const ofVec3f& global) override;
 
 	void renderToFbo(ofFbo& fbo);
 	void allocateFbo(ofFbo& fbo);

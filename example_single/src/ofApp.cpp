@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	bDebug = false;
-	ofSetFrameRate(30);
+	ofSetFrameRate(60);
 
 	// setup the scene
 	TouchManager::one().setup(&scene);			// TouchManager should know about the scene
@@ -14,7 +14,7 @@ void ofApp::setup(){
 	config["width"] = 40;
 	config["lines"] = 10;
 	config["font-size"] = 16;
-	config["border-corner"] = 8;
+	config["border-corner"] = 4;
 	editor.setConfig(config);
 
 	// set editor position at 50x50
@@ -38,7 +38,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	// update scene
-	scene.updateSubtreePostOrder(1.0/30);
+	scene.updateSubtreePostOrder(1.0/60);
 }
 
 //--------------------------------------------------------------
