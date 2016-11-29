@@ -89,7 +89,7 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 
 	// set size
 	setSize(config.width, config.fontSize*config.lines+config.borderWidth);
-	view = ofRectangle(0, 0, getWidth(), getHeight());
+	state.targetView = view = ofRectangle(0, 0, getWidth(), getHeight());
 
 	bDirty = true;
 }
@@ -395,7 +395,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	allocateFbo(fbo);
 	fbo.begin();
 	ofDisableDepthTest();
-	ofClear(255, 255, 255, 0);
+	ofClear(ofColor(config.bgColor, 0));
 	glClear(GL_STENCIL_BUFFER_BIT);
 
 	// render NanoVG elements
@@ -403,6 +403,10 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofPushMatrix();
 	ofTranslate(fboPad/2, fboPad/2);
 	ofxNanoVG::one().applyOFMatrix();
+
+	//////////////////////////////
+	// DRAW FRAME
+	//////////////////////////////
 
 	if (config.borderCorner>0.1) {
 		// Rounded corners
@@ -421,9 +425,13 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 
 	// draw line numbers bar
 	if (config.bLineNumbers) {
+		if (config.borderCorner>0.1) {
 		ofxNanoVG::one().fillRoundedRect(0.5*config.borderWidth, 0.5*config.borderWidth, config.lineNumbersWidth, getHeight()-config.borderWidth, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+		}
+		else {
+			ofxNanoVG::one().fillRect(0.5*config.borderWidth, 0.5*config.borderWidth, config.lineNumbersWidth, getHeight()-config.borderWidth, config.lineNumbersBGColor);
+		}
 	}
-
 
 	//////////////////////////////
 	// DRAW TEXT
@@ -487,6 +495,19 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, config.fontSize, config.selectionColor);
 		}
 	}
+
+	///////////////////////////////
+	// DRAW SCROLL BARS
+	///////////////////////////////
+
+	float barStartY = config.borderCorner;
+	float totalTextHeight = textLines.size()*config.fontSize;
+	float totalBarHeight = getHeight()-config.borderCorner*2;
+	float linesToHeightFactor = totalBarHeight / totalTextHeight;
+	float fly = barStartY+view.y*linesToHeightFactor;
+	float lly = barStartY+(view.y+view.height)*linesToHeightFactor;
+	lly = ofClamp(lly, 0, getHeight()-config.borderCorner);
+	ofxNanoVG::one().fillRect(getWidth()-0.5*config.borderWidth-4, fly, 2, lly-fly, config.borderColor);
 
 	///////////////////////////////
 	// DRAW CARET
@@ -680,18 +701,27 @@ float ofxInterfaceEditor::getLineNumberWidth()
 void ofxInterfaceEditor::refreshView()
 {
 	// Update view
+
 	ofVec2f cPos = toNode(state.caret);
-	while (cPos.y > getHeight()-0.5*config.fontSize) {	// if caret goes outside of the view
+	while (cPos.y > getHeight()-0.5*config.fontSize) {	// if caret goes below view height
 		state.targetView.y += config.fontSize;				// advance one line
 		cPos = toNode(state.caret);
 	}
 
-	while (cPos.y < 0) {
+	while (cPos.y < 0) {								// if caret goes above view y
 		state.targetView.y -= config.fontSize;
 		if (state.targetView.y < 0) {
 			state.targetView.y = 0;
 		}
 		cPos = toNode(state.caret);
+	}
+
+	caret_t c{(int)textLines.size()-1, 0};
+	while(int(state.targetView.y/config.fontSize)>0 && toNode(c).y<getHeight()-1.5*config.fontSize) {												// if last line is above view height and first line is not 0
+		state.targetView.y -= config.fontSize;
+		if (state.targetView.y < 0) {
+			state.targetView.y = 0;
+		}
 	}
 }
 
