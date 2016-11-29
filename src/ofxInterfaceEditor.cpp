@@ -34,6 +34,8 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	configJson["line-numbers-bg-color"] = "#434445 100%";
 	configJson["selection-color"] = "#aaaaaa 50%";
 	configJson["special-enter"] = false;
+	configJson["draggable"] = true;
+	configJson["title"] = "Text Editor";
 
 	// setup nanovg
 	ofxNanoVG::one().setup();
@@ -47,10 +49,13 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	fboPad =			256;
 	bDirty =			false;
 	font =				NULL;
-	state.caret.line =	0;
-	state.caret.chr =	0;
 	caretBlink =		0;
 	bShiftPressed = false;
+	bControlKeyPressed = false;
+	bCommandKeyPressed = false;
+	bInDrag = false;
+	state.caret.line =	0;
+	state.caret.chr =	0;
 	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
@@ -84,6 +89,16 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", config.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "b", config.fontSize).width;
 	config.letterSize = ofVec2f(lw, config.fontSize);
 	config.bSpecialEnter = ofxJsonParser::parseBool(configJson["special-enter"]);
+	config.bDraggable = ofxJsonParser::parseBool(configJson["draggable"]);
+	config.bTitle = configJson.isMember("title");
+	if (config.bTitle) {
+		config.titleString = configJson["title"].asString();
+		config.titleBarHeight = config.fontSize;
+	}
+	else {
+		config.titleString = "";
+		config.titleBarHeight = 0;
+	}
 
 	// set size
 	setSize((config.width+5)*lw, config.fontSize*config.lines+config.borderWidth);
@@ -125,6 +140,20 @@ void ofxInterfaceEditor::draw()
 {
 	ofSetColor(255);
 	lastRender.draw(-fboPad/2, -fboPad/2);
+}
+
+bool ofxInterfaceEditor::contains(const ofVec3f& global)
+{
+	if (!config.bDraggable) {
+		return Node::contains(global);
+	}
+	else {
+		ofVec2f local = toLocal(global);
+		if (local.x < 0 || local.x > getWidth() || local.y < -config.titleBarHeight || local.y > getHeight()) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void ofxInterfaceEditor::setText(const string &text)
@@ -238,6 +267,12 @@ void ofxInterfaceEditor::keyPressed(int key)
 				break;
 			case OF_KEY_END:
 				state.caret.chr = textLines[state.caret.line].size();
+				break;
+			case OF_KEY_PAGE_UP:
+				state.caret.line -= config.lines;
+				break;
+			case OF_KEY_PAGE_DOWN:
+				state.caret.line += config.lines;
 				break;
 		}
 		// clamp caret
@@ -433,7 +468,6 @@ void ofxInterfaceEditor::keyReleased(int key)
 
 void ofxInterfaceEditor::vscroll(float amount)
 {
-	ofLog() << "Amount = "<<amount;
 	state.targetView.y -= 2*amount;
 	limitView();
 }
@@ -452,6 +486,22 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofPushMatrix();
 	ofTranslate(fboPad/2, fboPad/2);
 	ofxNanoVG::one().applyOFMatrix();
+
+	///////////////////////////////////
+	// DRAW TITLE BAR (if draggable) //
+	///////////////////////////////////
+
+	if (config.bTitle) {
+		if (config.borderCorner>0.1) {
+			ofxNanoVG::one().fillRoundedRect(-0.5*config.borderWidth, -config.titleBarHeight, getWidth()+config.borderWidth, config.titleBarHeight+2*config.borderCorner, config.borderCorner, config.borderColor);
+		}
+		else {
+			ofxNanoVG::one().fillRect(-0.5*config.borderWidth, -config.titleBarHeight, getWidth()+config.borderWidth, config.titleBarHeight, config.borderColor);
+		}
+		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
+		ofxNanoVG::one().setFillColor(config.bgColor);
+		ofxNanoVG::one().drawText(font, 6, -config.titleBarHeight, config.titleString, config.fontSize);
+	}
 
 	//////////////////////////////
 	// DRAW BACKGROUND
@@ -696,6 +746,12 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
+	if (config.bDraggable && config.bTitle) {
+		if (local.y < 0) {
+			// touch on title
+			bInDrag = true;
+		}
+	}
 	state.selection.begin = state.selection.end = state.caret = toCaret(local, view);
 	state.selection.active = false;
 	caretBlink = 0;
@@ -703,13 +759,22 @@ void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 
 void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
 {
-	state.selection.end = toCaret(toLocal(event.position), view);
-	state.selection.active = true;
+	if (bInDrag) {
+		ofVec3f m = event.position-event.prevPosition;
+		move(m);
+	}
+	else {
+		state.selection.end = toCaret(toLocal(event.position), view);
+		state.selection.active = true;
+	}
 }
 
 void ofxInterfaceEditor::onTouchUp(TouchEvent& event)
 {
-	if (state.selection.begin.chr == state.selection.end.chr &&
+	if (bInDrag) {
+		bInDrag=false;
+	}
+	else if (state.selection.begin.chr == state.selection.end.chr &&
 		state.selection.begin.line == state.selection.end.line) {
 		state.selection.active = false;
 	}
@@ -750,10 +815,10 @@ void ofxInterfaceEditor::clearSelection()
 
 float ofxInterfaceEditor::getLineNumberWidth()
 {
-	float w=0;
+	float w=2;
 	int linesNum = textLines.size();
 	while (linesNum>0) {
-		w += config.letterSize.x;
+		w += 0.8*config.letterSize.x;
 		linesNum/=10;
 	}
 
@@ -788,7 +853,7 @@ void ofxInterfaceEditor::limitView()
 		float totalTextHeight = textLines.size()*config.fontSize;
 		if (totalTextHeight>=totalViewHeight) {
 			if (state.targetView.y+totalViewHeight>=totalTextHeight) {
-				state.targetView.y = totalTextHeight-getHeight();
+				state.targetView.y = totalTextHeight-totalViewHeight;
 			}
 		}
 		else {
