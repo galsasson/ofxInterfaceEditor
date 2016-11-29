@@ -118,7 +118,7 @@ void ofxInterfaceEditor::update(float dt)
 		renderToFbo(lastRender);
 		bDirty = false;
 //	}
-	caretBlink += 10*dt;
+	caretBlink += 5*dt;
 }
 
 void ofxInterfaceEditor::draw()
@@ -139,7 +139,8 @@ void ofxInterfaceEditor::setText(const string &text)
 	state.caret.line = state.caret.line<0?0:state.caret.line>textLines.size()-1?textLines.size()-1:state.caret.line;
 	state.caret.chr = state.caret.chr<0?0:state.caret.chr>textLines[state.caret.line].length()?textLines[state.caret.line].length():state.caret.chr;
 
-	refreshView();
+	bringViewToCaret();
+	limitView();
 }
 
 string ofxInterfaceEditor::getText()
@@ -250,6 +251,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		else {
 			state.selection.active = false;
 		}
+		bringViewToCaret();
 	}
 	else if (bControlKeyPressed || bCommandKeyPressed) {
 		// Special commands
@@ -273,6 +275,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 				state.selection.active = false;
 				state.caret = sb;
 			}
+			bringViewToCaret();
 		}
 		else if (key == 'c') {				// Copy
 			if (state.selection.active) {
@@ -281,6 +284,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 			else {
 				pasteboard = textLines[state.caret.line] + "\n";
 			}
+			bringViewToCaret();
 		}
 		else if (key == 'v') {				// Paste
 			if (pasteboard.size()>0) {
@@ -316,6 +320,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 					setText(newText.str());
 					state.caret = toCaret(cpos+pasteboard.size());
 				}
+				bringViewToCaret();
 			}
 		}
 		else if (key == 'z') {				// Undo/Redo
@@ -325,6 +330,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 			else {							// Undo
 				popUndoState();
 			}
+			bringViewToCaret();
 		}
 	}
 	else if (key >= 32 && key <= 126) {
@@ -335,6 +341,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 		textLines[state.caret.line].insert(state.caret.chr, ofToString((char)key));
 		state.caret.chr++;
+		bringViewToCaret();
 	}
 	else if (key == OF_KEY_BACKSPACE) {			// Delete
 		pushUndoState();
@@ -354,6 +361,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 			state.caret.line--;
 			state.caret.chr = chr;
 		}
+		bringViewToCaret();
 	}
 	else if (key == OF_KEY_DEL) {
 		pushUndoState();
@@ -373,6 +381,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 				textLines[state.caret.line].erase(state.caret.chr, 1);
 			}
 		}
+		bringViewToCaret();
 	}
 	else if (key == OF_KEY_RETURN) {			// Enter
 		pushUndoState();
@@ -398,9 +407,10 @@ void ofxInterfaceEditor::keyPressed(int key)
 			state.caret.line++;
 			state.caret.chr=0;
 		}
+		bringViewToCaret();
 	}
 
-	refreshView();
+	limitView();
 	caretBlink=0;
 }
 
@@ -421,9 +431,11 @@ void ofxInterfaceEditor::keyReleased(int key)
 	}
 }
 
-void ofxInterfaceEditor::scroll(float amount)
+void ofxInterfaceEditor::vscroll(float amount)
 {
-
+	ofLog() << "Amount = "<<amount;
+	state.targetView.y -= 2*amount;
+	limitView();
 }
 
 void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
@@ -494,7 +506,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	double frac = modf(view.y/config.fontSize, &firstLine);
 	// figure out first and last lines
 	caret_t first{(int)firstLine,0};
-	caret_t last = toCaret(ofVec2f(0, getHeight()));
+	caret_t last = toCaret(ofVec2f(0, getHeight()), view);
 	ofxNanoVG::one().enableScissor(0.5*config.borderWidth, 0.5*config.borderWidth, getWidth()-config.borderWidth, getHeight()-config.borderWidth);
 	ofPushMatrix();
 	ofTranslate(-view.x, -frac*config.fontSize);
@@ -526,8 +538,8 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		if (sc.line > ec.line) {
 			std::swap(sc, ec);
 		}
-		ofVec2f sPos = toNode(sc);
-		ofVec2f ePos = toNode(ec);
+		ofVec2f sPos = toNode(sc, view);
+		ofVec2f ePos = toNode(ec, view);
 		if (sc.line == ec.line) {
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, config.selectionColor);
 		}
@@ -537,7 +549,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 			// first line
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, config.selectionColor);
 			for (int l=sc.line+1; l<ec.line; l++) {
-				ofVec2f lpos = toNode(l, 0);
+				ofVec2f lpos = toNode(l, 0, view);
 				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, config.fontSize, config.selectionColor);
 			}
 			// last line
@@ -563,7 +575,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	// DRAW CARET
 	///////////////////////////////
 
-	ofVec2f cPos = toNode(state.caret);
+	ofVec2f cPos = toNode(state.caret, view);
 	float val = cos(caretBlink);
 	if (val>0) {
 		ofSetColor(255);
@@ -599,7 +611,7 @@ void ofxInterfaceEditor::allocateFbo(ofFbo& fbo)
 	}
 }
 
-ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
+ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p, ofRectangle& _view)
 {
 	struct caret_t c{
 		0,
@@ -611,8 +623,8 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	}
 	p.x -= config.pad.x + 0.5*config.borderWidth;
 	p.y -= config.pad.y + 0.5*config.borderWidth;
-	p.x += state.targetView.x;
-	p.y += state.targetView.y;
+	p.x += _view.x;
+	p.y += _view.y;
 
 	c.line = p.y/config.fontSize;
 	if (c.line < 0) {
@@ -633,18 +645,18 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p)
 	return c;
 }
 
-ofVec2f ofxInterfaceEditor::toNode(const ofxInterfaceEditor::caret_t& _caret)
+ofVec2f ofxInterfaceEditor::toNode(const ofxInterfaceEditor::caret_t& _caret, ofRectangle& _view)
 {
-	return toNode(_caret.line, _caret.chr);
+	return toNode(_caret.line, _caret.chr, _view);
 }
 
-ofVec2f ofxInterfaceEditor::toNode(int line, int chr)
+ofVec2f ofxInterfaceEditor::toNode(int line, int chr, ofRectangle& _view)
 {
 	ofVec2f p(chr*config.letterSize.x, line*config.fontSize);
 	p.x += 0.5*config.borderWidth+config.pad.x;
 	p.y += 0.5*config.borderWidth+config.pad.y;
-	p.x -= state.targetView.x;
-	p.y -= state.targetView.y;
+	p.x -= _view.x;
+	p.y -= _view.y;
 
 	if (config.bLineNumbers) {
 		p.x += config.lineNumbersWidth;
@@ -684,14 +696,14 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
-	state.selection.begin = state.selection.end = state.caret = toCaret(local);
+	state.selection.begin = state.selection.end = state.caret = toCaret(local, view);
 	state.selection.active = false;
 	caretBlink = 0;
 }
 
 void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
 {
-	state.selection.end = toCaret(toLocal(event.position));
+	state.selection.end = toCaret(toLocal(event.position), view);
 	state.selection.active = true;
 }
 
@@ -748,14 +760,13 @@ float ofxInterfaceEditor::getLineNumberWidth()
 	return w;
 }
 
-void ofxInterfaceEditor::refreshView()
+void ofxInterfaceEditor::bringViewToCaret()
 {
 	// Update view
-
-	ofVec2f cPos = toNode(state.caret);
+	ofVec2f cPos = toNode(state.caret, state.targetView);
 	while (cPos.y > getHeight()-0.5*config.fontSize) {	// if caret goes below view height
 		state.targetView.y += config.fontSize;				// advance one line
-		cPos = toNode(state.caret);
+		cPos = toNode(state.caret, state.targetView);
 	}
 
 	while (cPos.y < 0) {								// if caret goes above view y
@@ -763,13 +774,24 @@ void ofxInterfaceEditor::refreshView()
 		if (state.targetView.y < 0) {
 			state.targetView.y = 0;
 		}
-		cPos = toNode(state.caret);
+		cPos = toNode(state.caret, state.targetView);
 	}
+}
 
-	caret_t c{(int)textLines.size()-1, 0};
-	while(int(state.targetView.y/config.fontSize)>0 && toNode(c).y<getHeight()-1.5*config.fontSize) {												// if last line is above view height and first line is not 0
-		state.targetView.y -= config.fontSize;
-		if (state.targetView.y < 0) {
+void ofxInterfaceEditor::limitView()
+{
+	if (state.targetView.y < 0) {
+		state.targetView.y = 0;
+	}
+	else {
+		float totalViewHeight = state.targetView.height-config.borderWidth;
+		float totalTextHeight = textLines.size()*config.fontSize;
+		if (totalTextHeight>=totalViewHeight) {
+			if (state.targetView.y+totalViewHeight>=totalTextHeight) {
+				state.targetView.y = totalTextHeight-getHeight();
+			}
+		}
+		else {
 			state.targetView.y = 0;
 		}
 	}

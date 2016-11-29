@@ -29,10 +29,11 @@ public:
 	void saveToFile(const string& filename);	// save text to file
 	void appendString(const string& str);		// add text to end of buffer
 	void appendChar(char ch);					// add char to end of buffer
+	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);	// bpos and epos are optional arguments
 
 	void keyPressed(int key);	// use to pass keyboard events
 	void keyReleased(int key);	// use to pass keyboard events
-	void scroll(float amount);
+	void vscroll(float amount);	// use to pass vscroll events
 
 private:
 	Json::Value configJson;
@@ -41,7 +42,7 @@ private:
 	bool bDirty;
 	int fboPad;
 	ofxNanoVG::Font* font;
-	ofRectangle view;
+	ofRectangle view;			// current view rectangle
 	bool bShiftPressed;
 	bool bCommandKeyPressed;
 	bool bControlKeyPressed;
@@ -92,9 +93,9 @@ private:
 
 	void renderToFbo(ofFbo& fbo);
 	void allocateFbo(ofFbo& fbo);
-	caret_t toCaret(ofVec2f p);
-	ofVec2f toNode(const caret_t& caret);
-	ofVec2f toNode(int line, int chr);
+	caret_t toCaret(ofVec2f p, ofRectangle& _view);
+	ofVec2f toNode(const caret_t& caret, ofRectangle& _view);
+	ofVec2f toNode(int line, int chr, ofRectangle& _view);
 	size_t toTextPos(const caret_t& c);
 	caret_t toCaret(size_t textPos);
 	void onTouchDown(TouchEvent& event);
@@ -102,8 +103,8 @@ private:
 	void onTouchUp(TouchEvent& event);
 	void clearSelection();
 	float getLineNumberWidth();
-	void refreshView();
-	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);
+	void bringViewToCaret();		// make sure that the current caret is in the view
+	void limitView();				// make sure the view is legal
 	void pushUndoState();
 	void popUndoState();
 	void pushRedoState();

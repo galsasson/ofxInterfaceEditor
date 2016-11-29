@@ -38,7 +38,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	// update scene
-	scene.updateSubtreePostOrder(1.0/60);
+	scene.updateSubtreePostOrder(1.0/30);
 }
 
 //--------------------------------------------------------------
@@ -100,6 +100,12 @@ void ofApp::mouseEntered(int x, int y){
 //--------------------------------------------------------------
 void ofApp::mouseExited(int x, int y){
 
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY)
+{
+	editor.vscroll(scrollY);
 }
 
 //--------------------------------------------------------------
