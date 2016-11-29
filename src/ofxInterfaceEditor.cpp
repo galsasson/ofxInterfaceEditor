@@ -219,6 +219,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		// command/control with character
 		if (key == 'x') {					// Cut
 			if (state.selection.active) {
+				pushUndoState();
 				string str = getText();
 				caret_t sb = state.selection.begin;
 				caret_t se = state.selection.end;
@@ -245,6 +246,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 		else if (key == 'v') {				// Paste
 			if (pasteboard.size()>0) {
+				pushUndoState();
 				if (state.selection.active) {
 					// paste in selection place
 					string str = getText();
@@ -278,12 +280,18 @@ void ofxInterfaceEditor::keyPressed(int key)
 				}
 			}
 		}
-		else if (key == 'z') {				// Undo
-			
+		else if (key == 'z') {				// Undo/Redo
+			if (bShiftPressed) {			// Redo
+				popRedoState();
+			}
+			else {							// Undo
+				popUndoState();
+			}
 		}
 	}
 	else if (key >= 32 && key <= 126) {
 		// This is normal letter typing
+		pushUndoState();
 		if (state.selection.active) {
 			clearSelection();
 		}
@@ -291,6 +299,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		state.caret.chr++;
 	}
 	else if (key == OF_KEY_BACKSPACE) {			// Delete
+		pushUndoState();
 		if (state.selection.active) {
 			clearSelection();
 		}
@@ -309,6 +318,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 	}
 	else if (key == OF_KEY_DEL) {
+		pushUndoState();
 		if (state.selection.active) {
 			clearSelection();
 		}
@@ -327,6 +337,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		}
 	}
 	else if (key == OF_KEY_RETURN) {			// Enter
+		pushUndoState();
 		if (cache.bSpecialEnter) {
 			if (state.caret.chr == textLines[state.caret.line].size()) {
 				// Enter at end of line
@@ -708,3 +719,40 @@ string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
 	return str.substr(bpos, epos-bpos);
 }
 
+void ofxInterfaceEditor::pushUndoState()
+{
+	state.text = getText();
+	undoStates.push(state);
+}
+
+void ofxInterfaceEditor::popUndoState()
+{
+	if (undoStates.empty()) {
+		return;
+	}
+
+	pushRedoState();
+
+	state = undoStates.top();
+	undoStates.pop();
+	setText(state.text);
+}
+
+void ofxInterfaceEditor::pushRedoState()
+{
+	state.text = getText();
+	redoStates.push(state);
+}
+
+void ofxInterfaceEditor::popRedoState()
+{
+	if (redoStates.empty()) {
+		return;
+	}
+
+	pushUndoState();
+
+	state = redoStates.top();
+	redoStates.pop();
+	setText(state.text);
+}
