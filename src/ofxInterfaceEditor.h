@@ -23,6 +23,8 @@ public:
 
 	void loadConfig(const string& filename);	// load config from file
 	void setConfig(const Json::Value& config);	// set editor config object
+	void setTitle(const string& name);
+
 	void setText(const string& text);			// set editor text
 	string getText();							// get editor text
 	void loadFromFile(const string& filename);	// load text from file
@@ -49,6 +51,7 @@ private:
 	string pasteboard;
 	float caretBlink;
 	bool bInDrag;
+	bool bCollapsed;
 
 	struct caret_t {
 		int line;
@@ -100,6 +103,7 @@ private:
 	bool contains(const ofVec3f& global) override;
 
 	void renderToFbo(ofFbo& fbo);
+	void drawTextEditor();
 	void allocateFbo(ofFbo& fbo);
 	caret_t toCaret(ofVec2f p, ofRectangle& _view);
 	ofVec2f toNode(const caret_t& caret, ofRectangle& _view);
