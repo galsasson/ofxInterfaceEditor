@@ -59,6 +59,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	state.caret.chr =	0;
 	state.desiredChr =	0;
 	bCollapsed =		false;
+	copyTimer =			0;
 	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
@@ -166,9 +167,13 @@ bool ofxInterfaceEditor::contains(const ofVec3f& global)
 	return true;
 }
 
-void ofxInterfaceEditor::setText(const string &text)
+void ofxInterfaceEditor::setText(const string &text, bool clearUndo)
 {
-	pushUndoState();
+	if (clearUndo) {
+		undoStates = std::stack<editor_state_t>();
+		redoStates = std::stack<editor_state_t>();
+	}
+
 	textLines = ofSplitString(text, "\n", false, false);
 	if (textLines.empty()) {
 		textLines.push_back("");
@@ -237,7 +242,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		return;
 	}
 
-//	ofLog() << "Key Pressed = "<<key;
+	ofLog() << "Key Pressed = "<<key;
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
 		if (!state.selection.active) {
@@ -314,7 +319,10 @@ void ofxInterfaceEditor::keyPressed(int key)
 	}
 	else if (bControlKeyPressed || bCommandKeyPressed) {
 		// Special commands
-		key += bControlKeyPressed?32:96;
+		if (key < 32) {
+			key += bControlKeyPressed?32:96;
+		}
+
 		// command/control with character
 		if (key == 'x') {					// Cut
 			if (state.selection.active) {
@@ -337,6 +345,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 			bringViewToCaret();
 		}
 		else if (key == 'c') {				// Copy
+			copyTimer += 0.2;
 			if (state.selection.active) {
 				pasteboard = getSelectedText();
 			}
@@ -483,7 +492,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 		return;
 	}
 
-//	ofLog() << "Key Released = "<<key;
+	ofLog() << "Key Released = "<<key;
 	switch (key) {
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
@@ -661,6 +670,7 @@ void ofxInterfaceEditor::drawTextEditor()
 		}
 		ofVec2f sPos = toNode(sc, view);
 		ofVec2f ePos = toNode(ec, view);
+//		ofColor c = copyTimer?config.selectionColor
 		if (sc.line == ec.line) {
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, config.selectionColor);
 		}

@@ -25,7 +25,7 @@ public:
 	void setConfig(const Json::Value& config);	// set editor config object
 	void setTitle(const string& name);
 
-	void setText(const string& text);			// set editor text
+	void setText(const string& text, bool clearUndo=false);		// set editor text
 	string getText();							// get editor text
 	void loadFromFile(const string& filename);	// load text from file
 	void saveToFile(const string& filename);	// save text to file
@@ -52,6 +52,7 @@ protected:
 	float caretBlink;
 	bool bInDrag;
 	bool bCollapsed;
+	float copyTimer;
 
 	struct caret_t {
 		int line;
