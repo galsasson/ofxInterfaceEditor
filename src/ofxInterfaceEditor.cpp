@@ -510,7 +510,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	allocateFbo(fbo);
 	fbo.begin();
 	ofDisableDepthTest();
-	ofClear(ofColor(config.bgColor, 0));
+	ofClear(ofColor(config.borderColor, 0));
 	glClear(GL_STENCIL_BUFFER_BIT);
 
 	// begin frame and translate after the pad
@@ -634,7 +634,7 @@ void ofxInterfaceEditor::drawTextEditor()
 	ofxNanoVG::one().applyOFMatrix();
 	for (int i=first.line; i<=last.line; i++) {
 		string& line = textLines[i];
-		ofxNanoVG::one().fillRect(halfBW+config.lineNumbersWidth, config.pad.y+y, 0.5f*config.pad.x, config.fontSize, ofColor(config.fontColor, (i==state.caret.line)?200:90));
+		ofxNanoVG::one().fillRect(halfBW+config.lineNumbersWidth, config.pad.y+y, 0.5f*config.pad.x, config.fontSize, ofColor(config.fontColor, (i==state.caret.line)?140:90));
 		ofxNanoVG::one().setFillColor(config.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
 		ofxNanoVG::one().drawText(font, halfBW+config.lineNumbersWidth+config.pad.x, config.pad.y+y, line, config.fontSize);
