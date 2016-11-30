@@ -10,6 +10,7 @@
 		2A0F11461DE535B9008C234C /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 2A0F11421DE535B9008C234C /* README.md */; };
 		2A0F11471DE535B9008C234C /* ofxJsonParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A0F11441DE535B9008C234C /* ofxJsonParser.cpp */; };
 		2A256DBE1DE4C16A009F1C43 /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A256DB91DE4BC91009F1C43 /* openFrameworksDebug.a */; };
+		2A365E851DEE601400BF2456 /* LambdaView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A365E831DEE601400BF2456 /* LambdaView.cpp */; };
 		2A5542A51DAC724100E6E074 /* ofxInterfaceEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542A31DAC724100E6E074 /* ofxInterfaceEditor.cpp */; };
 		2A5542D21DAC726100E6E074 /* BitmapTextButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542BE1DAC726100E6E074 /* BitmapTextButton.cpp */; };
 		2A5542D31DAC726100E6E074 /* SolidColorPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542C01DAC726100E6E074 /* SolidColorPanel.cpp */; };
@@ -60,6 +61,8 @@
 		2A0F11421DE535B9008C234C /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2A0F11441DE535B9008C234C /* ofxJsonParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxJsonParser.cpp; sourceTree = "<group>"; };
 		2A0F11451DE535B9008C234C /* ofxJsonParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxJsonParser.h; sourceTree = "<group>"; };
+		2A365E831DEE601400BF2456 /* LambdaView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LambdaView.cpp; sourceTree = "<group>"; };
+		2A365E841DEE601400BF2456 /* LambdaView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LambdaView.h; sourceTree = "<group>"; };
 		2A5542A31DAC724100E6E074 /* ofxInterfaceEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxInterfaceEditor.cpp; sourceTree = "<group>"; };
 		2A5542A41DAC724100E6E074 /* ofxInterfaceEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxInterfaceEditor.h; sourceTree = "<group>"; };
 		2A5542BE1DAC726100E6E074 /* BitmapTextButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitmapTextButton.cpp; sourceTree = "<group>"; };
@@ -191,6 +194,8 @@
 		2A5542BD1DAC726100E6E074 /* components */ = {
 			isa = PBXGroup;
 			children = (
+				2A365E831DEE601400BF2456 /* LambdaView.cpp */,
+				2A365E841DEE601400BF2456 /* LambdaView.h */,
 				2A5542BE1DAC726100E6E074 /* BitmapTextButton.cpp */,
 				2A5542BF1DAC726100E6E074 /* BitmapTextButton.h */,
 				2A5542C01DAC726100E6E074 /* SolidColorPanel.cpp */,
@@ -480,6 +485,7 @@
 				2A55431E1DAC72B000E6E074 /* ofxJSONElement.cpp in Sources */,
 				2A5542D61DAC726100E6E074 /* TouchEvent.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
+				2A365E851DEE601400BF2456 /* LambdaView.cpp in Sources */,
 				2A5542D31DAC726100E6E074 /* SolidColorPanel.cpp in Sources */,
 				2A0F11461DE535B9008C234C /* README.md in Sources */,
 				2A5542D41DAC726100E6E074 /* TextureButton.cpp in Sources */,
