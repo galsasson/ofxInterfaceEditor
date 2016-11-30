@@ -37,7 +37,7 @@ public:
 	void keyReleased(int key);	// use to pass keyboard events
 	void vscroll(float amount);	// use to pass vscroll events
 
-private:
+protected:
 	Json::Value configJson;
 	ofFbo lastRender;
 	vector<string> textLines;
@@ -93,6 +93,7 @@ private:
 		caret_t caret;
 		selection_t selection;
 		ofRectangle targetView;			// for animated scroll
+		size_t desiredChr;
 	} state;							// current state
 	stack<editor_state_t> undoStates;	// undo states
 	stack<editor_state_t> redoStates;	// redos states
@@ -102,8 +103,12 @@ private:
 	void draw() override;
 	bool contains(const ofVec3f& global) override;
 
-	void renderToFbo(ofFbo& fbo);
-	void drawTextEditor();
+
+	// can override to change the drawing code (currently using ofxNanoVG)
+	virtual void renderToFbo(ofFbo& fbo);
+	virtual void drawTextEditor();
+
+
 	void allocateFbo(ofFbo& fbo);
 	caret_t toCaret(ofVec2f p, ofRectangle& _view);
 	ofVec2f toNode(const caret_t& caret, ofRectangle& _view);
