@@ -144,7 +144,14 @@ void ofxInterfaceEditor::update(float dt)
 		renderToFbo(lastRender);
 		bDirty = false;
 //	}
+
 	caretBlink += 5*dt;
+	if (copyTimer > 0) {
+		copyTimer -= dt;
+		if (copyTimer<0) {
+			copyTimer = 0;
+		}
+	}
 }
 
 void ofxInterfaceEditor::draw()
@@ -670,21 +677,24 @@ void ofxInterfaceEditor::drawTextEditor()
 		}
 		ofVec2f sPos = toNode(sc, view);
 		ofVec2f ePos = toNode(ec, view);
-//		ofColor c = copyTimer?config.selectionColor
+		ofColor c = config.selectionColor;
+		if (copyTimer>0) {
+			c.a += ofMap(copyTimer, 0, 0.2, 0, 100, true);
+		}
 		if (sc.line == ec.line) {
-			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, config.selectionColor);
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, c);
 		}
 		else {
 			float rightEdge = getWidth()-halfBW;
 			float leftEdge = halfBW+config.lineNumbersWidth+config.pad.x;
 			// first line
-			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, config.selectionColor);
+			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, c);
 			for (int l=sc.line+1; l<ec.line; l++) {
 				ofVec2f lpos = toNode(l, 0, view);
-				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, config.fontSize, config.selectionColor);
+				ofxNanoVG::one().fillRect(leftEdge, lpos.y, rightEdge-leftEdge, config.fontSize, c);
 			}
 			// last line
-			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, config.fontSize, config.selectionColor);
+			ofxNanoVG::one().fillRect(leftEdge, ePos.y, ePos.x-leftEdge, config.fontSize, c);
 		}
 	}
 
