@@ -13,8 +13,8 @@ void ofApp::setup(){
 	Json::Value config = Json::objectValue;
 	config["width"] = 40;
 	config["lines"] = 10;
-	config["font-size"] = 16;
-	config["border-corner"] = 4;
+	config["font-size"] = 16*2;
+	config["border-corner"] = 4*2;
 	editor.setConfig(config);
 
 	// set editor position at 50x50
@@ -53,12 +53,14 @@ void ofApp::onLoadClicked(ofxInterface::TouchEvent &event)
 {
 	ofLogNotice("ofApp") << "Loading from example.txt";
 	editor.loadFromFile("example.txt");
+	editor.setTitle("example.txt");
 }
 
 //--------------------------------------------------------------
 void ofApp::onSaveClicked(ofxInterface::TouchEvent &event)
 {
 	editor.saveToFile("example.txt");
+	editor.setTitle("example.txt saved!");
 	ofLogNotice("ofApp") << "Saved to example.txt";
 }
 

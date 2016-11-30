@@ -50,12 +50,13 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	bDirty =			false;
 	font =				NULL;
 	caretBlink =		0;
-	bShiftPressed = false;
-	bControlKeyPressed = false;
-	bCommandKeyPressed = false;
-	bInDrag = false;
+	bShiftPressed =		false;
+	bControlKeyPressed =false;
+	bCommandKeyPressed =false;
+	bInDrag =			false;
 	state.caret.line =	0;
 	state.caret.chr =	0;
+	bCollapsed =		false;
 	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
 
@@ -94,6 +95,7 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	if (config.bTitle) {
 		config.titleString = configJson["title"].asString();
 		config.titleBarHeight = config.fontSize;
+		setName(config.titleString);
 	}
 	else {
 		config.titleString = "";
@@ -105,6 +107,12 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	state.targetView = view = ofRectangle(0, 0, getWidth(), getHeight());
 
 	bDirty = true;
+}
+
+void ofxInterfaceEditor::setTitle(const string& name)
+{
+	setName(name);
+	config.titleString = name;
 }
 
 void ofxInterfaceEditor::loadConfig(const string& filename)
@@ -223,6 +231,10 @@ void ofxInterfaceEditor::appendChar(char ch)
 
 void ofxInterfaceEditor::keyPressed(int key)
 {
+	if (bCollapsed) {
+		return;
+	}
+
 //	ofLog() << "Key Pressed = "<<key;
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
@@ -451,6 +463,10 @@ void ofxInterfaceEditor::keyPressed(int key)
 
 void ofxInterfaceEditor::keyReleased(int key)
 {
+	if (bCollapsed) {
+		return;
+	}
+
 //	ofLog() << "Key Released = "<<key;
 	switch (key) {
 		case OF_KEY_SHIFT:
@@ -481,26 +497,67 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	ofClear(ofColor(config.bgColor, 0));
 	glClear(GL_STENCIL_BUFFER_BIT);
 
-	// render NanoVG elements
+	// begin frame and translate after the pad
 	ofxNanoVG::one().beginFrame(fbo.getWidth(), fbo.getHeight(), 1);
 	ofPushMatrix();
 	ofTranslate(fboPad/2, fboPad/2);
 	ofxNanoVG::one().applyOFMatrix();
 
+
+	drawTextEditor();
+
+
+	ofxNanoVG::one().disableScissor();
+	ofxNanoVG::one().endFrame();
+
+
+	ofPopMatrix();
+	fbo.end();
+	fbo.getTexture().generateMipmap();
+}
+
+void ofxInterfaceEditor::drawTextEditor()
+{
+	float halfBW = 0.5*config.borderWidth;
 	///////////////////////////////////
 	// DRAW TITLE BAR (if draggable) //
 	///////////////////////////////////
 
 	if (config.bTitle) {
 		if (config.borderCorner>0.1) {
-			ofxNanoVG::one().fillRoundedRect(-0.5*config.borderWidth, -config.titleBarHeight, getWidth()+config.borderWidth, config.titleBarHeight+2*config.borderCorner, config.borderCorner, config.borderColor);
+			float barH = bCollapsed?config.fontSize:config.titleBarHeight+2*config.borderCorner;
+			ofxNanoVG::one().fillRoundedRect(-halfBW, -config.titleBarHeight, getWidth()+config.borderWidth, barH, config.borderCorner, config.borderColor);
 		}
 		else {
-			ofxNanoVG::one().fillRect(-0.5*config.borderWidth, -config.titleBarHeight, getWidth()+config.borderWidth, config.titleBarHeight, config.borderColor);
+			ofxNanoVG::one().fillRect(-halfBW, -config.titleBarHeight, getWidth()+config.borderWidth, config.titleBarHeight, config.borderColor);
 		}
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
 		ofxNanoVG::one().setFillColor(config.bgColor);
 		ofxNanoVG::one().drawText(font, 6, -config.titleBarHeight, config.titleString, config.fontSize);
+
+		// Draw collapse button
+		ofVec2f vec(0, -0.4*config.fontSize);
+		if (bCollapsed) {
+			// draw up arrow
+			ofVec2f center(getWidth()-0.5*config.fontSize, -0.45*config.fontSize);
+			ofxNanoVG::one().beginPath();
+			ofxNanoVG::one().moveTo(center+vec);
+			ofxNanoVG::one().lineTo(center+vec.getRotated(120));
+			ofxNanoVG::one().lineTo(center+vec.getRotated(-120));
+			ofxNanoVG::one().lineTo(center+vec);
+			ofxNanoVG::one().fillPath(config.bgColor);
+			return;
+		}
+		else {
+			// draw down arrow
+			ofVec2f center(getWidth()-0.5*config.fontSize, -0.55*config.fontSize);
+			ofxNanoVG::one().beginPath();
+			ofxNanoVG::one().moveTo(center+vec.getRotated(180));
+			ofxNanoVG::one().lineTo(center+vec.getRotated(-60));
+			ofxNanoVG::one().lineTo(center+vec.getRotated(60));
+			ofxNanoVG::one().lineTo(center+vec.getRotated(180));
+			ofxNanoVG::one().fillPath(config.bgColor);
+		}
 	}
 
 	//////////////////////////////
@@ -549,7 +606,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	//////////////////////////////
 
 	ofxNanoVG::one().setFillColor(config.fontColor);
-	float y=0.5*config.borderWidth;
+	float y=halfBW;
 
 	// draw only visible part of text
 	double firstLine;
@@ -557,7 +614,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	// figure out first and last lines
 	caret_t first{(int)firstLine,0};
 	caret_t last = toCaret(ofVec2f(0, getHeight()), view);
-	ofxNanoVG::one().enableScissor(0.5*config.borderWidth, 0.5*config.borderWidth, getWidth()-config.borderWidth, getHeight()-config.borderWidth);
+	ofxNanoVG::one().enableScissor(halfBW, halfBW, getWidth()-config.borderWidth, getHeight()-config.borderWidth);
 	ofPushMatrix();
 	ofTranslate(-view.x, -frac*config.fontSize);
 	ofxNanoVG::one().applyOFMatrix();
@@ -570,7 +627,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 		}
 		ofxNanoVG::one().setFillColor(config.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
-		ofxNanoVG::one().drawText(font, 0.5*config.borderWidth+config.lineNumbersWidth+config.pad.x, config.pad.y+y, line, config.fontSize);
+		ofxNanoVG::one().drawText(font, halfBW+config.lineNumbersWidth+config.pad.x, config.pad.y+y, line, config.fontSize);
 		y += config.fontSize;
 	}
 
@@ -594,8 +651,8 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, ePos.x-sPos.x, config.fontSize, config.selectionColor);
 		}
 		else {
-			float rightEdge = getWidth()-0.5*config.borderWidth;
-			float leftEdge = 0.5*config.borderWidth+config.lineNumbersWidth+config.pad.x;
+			float rightEdge = getWidth()-halfBW;
+			float leftEdge = halfBW+config.lineNumbersWidth+config.pad.x;
 			// first line
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, config.selectionColor);
 			for (int l=sc.line+1; l<ec.line; l++) {
@@ -619,27 +676,15 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	float fly = barStartY+view.y*linesToHeightFactor;
 	float lly = barStartY+(view.y+view.height)*linesToHeightFactor;
 	lly = ofClamp(lly, 0, barStartY+totalBarHeight);
-	ofxNanoVG::one().fillRect(getWidth()-0.5*config.borderWidth-4, fly, 2, lly-fly, config.borderColor);
-
+	ofxNanoVG::one().fillRect(getWidth()-halfBW-4, fly, 2, lly-fly, config.borderColor);
 	///////////////////////////////
 	// DRAW CARET
 	///////////////////////////////
-
 	ofVec2f cPos = toNode(state.caret, view);
-	float val = cos(caretBlink);
-	if (val>0) {
+	if (cos(caretBlink)>0) {
 		ofSetColor(255);
 		ofxNanoVG::one().fillRect(cPos.x, cPos.y, 1, config.fontSize, config.fontColor);
 	}
-	
-	ofxNanoVG::one().disableScissor();
-
-	ofxNanoVG::one().endFrame();
-
-
-	ofPopMatrix();
-	fbo.end();
-	fbo.getTexture().generateMipmap();
 }
 
 void ofxInterfaceEditor::allocateFbo(ofFbo& fbo)
@@ -746,8 +791,12 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
-	if (config.bDraggable && config.bTitle) {
-		if (local.y < 0) {
+	if (config.bTitle && local.y < 0) {
+		if (local.x > getWidth()-config.fontSize) {
+			// touch to collapse button
+			bCollapsed = !bCollapsed;
+		}
+		else if (config.bDraggable) {
 			// touch on title
 			bInDrag = true;
 		}
