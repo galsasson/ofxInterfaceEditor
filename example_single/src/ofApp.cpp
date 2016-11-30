@@ -13,8 +13,8 @@ void ofApp::setup(){
 	Json::Value config = Json::objectValue;
 	config["width"] = 40;
 	config["lines"] = 10;
+	config["font"] = "Menlo-Regular.ttf";
 	config["font-size"] = 22;
-//	config["border-corner"] = 0;
 	editor.setConfig(config);
 
 	// set editor position at 50x50
