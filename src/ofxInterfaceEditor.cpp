@@ -524,7 +524,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 
 void ofxInterfaceEditor::vscroll(int x, int y, float amount)
 {
-	if (!contains(toLocal(ofVec2f(x,y)))) {
+	if (!contains(ofVec2f(x,y))) {
 		return;
 	}
 	state.targetView.y -= 4*amount;
