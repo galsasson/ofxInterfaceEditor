@@ -38,6 +38,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	configJson["draggable"] =				true;
 	configJson["title"] =					true;
 	configJson["title-text"] =				"Text Editor";
+	configJson["tab-width"] =				2;
 
 	// setup nanovg
 	ofxNanoVG::one().setup();
@@ -105,6 +106,11 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	else {
 		config.titleString = "";
 		config.titleBarHeight = 0;
+	}
+	config.tabWidth = ofxJsonParser::parseInt(configJson["tab-width"]);
+	config.tabString = "";
+	for (int i=0; i<config.tabWidth; i++) {
+		config.tabString = config.tabString+" ";
 	}
 
 	// set size
@@ -493,6 +499,19 @@ void ofxInterfaceEditor::keyPressed(int key)
 		textLines.insert(textLines.begin()+state.caret.line+1, afterCaret);
 		state.caret.line++;
 		state.caret.chr=0;
+		state.desiredChr=state.caret.chr;
+		bringViewToCaret();
+	}
+	else if (key == OF_KEY_TAB) {
+		if (!fireEvent(eventTabDown)) {
+			return;
+		}
+		pushUndoState();
+		if (state.selection.active) {
+			clearSelection();
+		}
+		textLines[state.caret.line].insert(state.caret.chr, config.tabString);
+		state.caret.chr+=config.tabString.size();
 		state.desiredChr=state.caret.chr;
 		bringViewToCaret();
 	}
@@ -1016,6 +1035,11 @@ string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
 ofxInterfaceEditor::caret_t ofxInterfaceEditor::getCaret()
 {
 	return state.caret;
+}
+
+size_t ofxInterfaceEditor::getCaretPos()
+{
+	return toTextPos(state.caret);
 }
 
 void ofxInterfaceEditor::flashSelectedText(float time)

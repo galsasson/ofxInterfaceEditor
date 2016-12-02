@@ -40,6 +40,7 @@ public:
 	void appendChar(char ch);					// add char to end of buffer
 	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);	// bpos and epos are optional arguments
 	caret_t getCaret();
+	size_t getCaretPos();
 	void flashSelectedText(float time);
 
 	// get editor events
@@ -48,6 +49,7 @@ public:
 		bool continueNormalBehavior;
 	};
 	ofEvent<EventArgs> eventEnterDown;
+	ofEvent<EventArgs> eventTabDown;
 
 	void keyPressed(int key);	// use to pass keyboard events
 	void keyReleased(int key);	// use to pass keyboard events
@@ -98,6 +100,8 @@ protected:
 		float titleBarHeight;
 		ofColor titleColor;
 		int maxLines;
+		int tabWidth;
+		string tabString;
 	} config;
 
 	struct selection_t {
