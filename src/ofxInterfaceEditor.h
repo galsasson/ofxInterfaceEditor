@@ -18,6 +18,11 @@ using namespace ofxInterface;
 class ofxInterfaceEditor : public Node
 {
 public:
+	struct caret_t {
+		int line;
+		int chr;
+	};
+
 	~ofxInterfaceEditor();
 	ofxInterfaceEditor();
 
@@ -25,17 +30,33 @@ public:
 	void setConfig(const Json::Value& config);	// set editor config object
 	void setTitle(const string& name);
 
-	void setText(const string& text, bool clearUndo=false);		// set editor text
-	string getText();							// get editor text
 	void loadFromFile(const string& filename);	// load text from file
 	void saveToFile(const string& filename);	// save text to file
+
+	void setText(const string& text, bool clearUndo=false);		// set editor text
+	string getText();							// get editor text
+	string getLine(size_t i);
 	void appendString(const string& str);		// add text to end of buffer
 	void appendChar(char ch);					// add char to end of buffer
 	string getSelectedText(size_t* bpos=NULL, size_t* epos=NULL);	// bpos and epos are optional arguments
+	caret_t getCaret();
+	void flashSelectedText(float time);
+
+	// get editor events
+	struct EventArgs {
+		ofxInterfaceEditor* editor;
+		bool continueNormalBehavior;
+	};
+	ofEvent<EventArgs> eventEnterDown;
 
 	void keyPressed(int key);	// use to pass keyboard events
 	void keyReleased(int key);	// use to pass keyboard events
-	void vscroll(float amount);	// use to pass vscroll events
+	void vscroll(int x, int y, float amount);	// use to pass vscroll events
+
+	// Node orerrides
+	void update(float dt) override;
+	void draw() override;
+	bool contains(const ofVec3f& global) override;
 
 protected:
 	Json::Value configJson;
@@ -53,11 +74,6 @@ protected:
 	bool bInDrag;
 	bool bCollapsed;
 	float copyTimer;
-
-	struct caret_t {
-		int line;
-		int chr;
-	};
 
 	struct configcache_t {
 		float width;
@@ -81,6 +97,7 @@ protected:
 		string titleString;
 		float titleBarHeight;
 		ofColor titleColor;
+		int maxLines;
 	} config;
 
 	struct selection_t {
@@ -98,11 +115,6 @@ protected:
 	} state;							// current state
 	stack<editor_state_t> undoStates;	// undo states
 	stack<editor_state_t> redoStates;	// redos states
-
-	// Node orerrides
-	void update(float dt) override;
-	void draw() override;
-	bool contains(const ofVec3f& global) override;
 
 
 	// can override to change the drawing code (currently using ofxNanoVG)
@@ -127,6 +139,7 @@ protected:
 	void popUndoState();
 	void pushRedoState();
 	void popRedoState();
+	bool fireEvent(ofEvent<EventArgs>& event);
 };
 
 #endif /* ofxInterfaceEditor_h */

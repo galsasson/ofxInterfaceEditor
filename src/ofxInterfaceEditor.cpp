@@ -20,9 +20,10 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	configJson = Json::objectValue;
 	configJson["width"] =					80;	// in chars
 	configJson["lines"] =					20;	// in lines
+	configJson["max-lines"] =				-1;
 	configJson["pad"][0] =					6;
 	configJson["pad"][1] =					0;
-	configJson["background-color"] =		"#222322 100%";
+	configJson["background-color"] =		"#111111 100%";
 	configJson["border-width"] =			2;
 	configJson["border-color"] =			"#ffffff 100%";
 	configJson["border-corner"] =			8;
@@ -79,6 +80,7 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	// cache config value
 	config.width = ofxJsonParser::parseInt(configJson["width"], 80);
 	config.lines = ofxJsonParser::parseInt(configJson["lines"], 1);
+	config.maxLines = ofxJsonParser::parseInt(configJson["max-lines"], -1);
 	config.borderWidth = ofxJsonParser::parseFloat(configJson["border-width"]);
 	config.borderCorner = ofxJsonParser::parseFloat(configJson["border-corner"]);
 	config.fontSize = ofxJsonParser::parseFloat(configJson["font-size"]);
@@ -185,6 +187,9 @@ void ofxInterfaceEditor::setText(const string &text, bool clearUndo)
 	if (textLines.empty()) {
 		textLines.push_back("");
 	}
+	if (config.maxLines>0 && textLines.size()>config.maxLines) {
+		textLines.erase(textLines.begin()+1, textLines.end());
+	}
 
 	// clamp caret
 	state.caret.line = state.caret.line<0?0:state.caret.line>textLines.size()-1?textLines.size()-1:state.caret.line;
@@ -204,6 +209,14 @@ string ofxInterfaceEditor::getText()
 		}
 	}
 	return str;
+}
+
+string ofxInterfaceEditor::getLine(size_t i)
+{
+	if (i<textLines.size()) {
+		return textLines[i];
+	}
+	return "";
 }
 
 void ofxInterfaceEditor::loadFromFile(const string &filename)
@@ -249,7 +262,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 		return;
 	}
 
-	ofLog() << "Key Pressed = "<<key;
+//	ofLog() << "Key Pressed = "<<key;
 	if (key == OF_KEY_SHIFT) {
 		bShiftPressed=true;
 		if (!state.selection.active) {
@@ -462,29 +475,24 @@ void ofxInterfaceEditor::keyPressed(int key)
 		bringViewToCaret();
 	}
 	else if (key == OF_KEY_RETURN) {			// Enter
+		if (!fireEvent(eventEnterDown)) {
+			return;
+		}
+
+		if (state.caret.line==config.maxLines-1) {
+			return;
+		}
+
 		pushUndoState();
-		if (config.bSpecialEnter) {
-			if (state.caret.chr == textLines[state.caret.line].size()) {
-				// Enter at end of line
-				textLines.insert(textLines.begin()+state.caret.line+1, "");
-				state.caret.line++;
-				state.caret.chr=0;
-			}
-			else {
-				// Enter in middle of line
-			}
+		if (state.selection.active) {
+			clearSelection();
 		}
-		else {
-			if (state.selection.active) {
-				clearSelection();
-			}
-			// Normal enter behavior
-			string afterCaret = textLines[state.caret.line].substr(state.caret.chr, textLines[state.caret.line].size());
-			textLines[state.caret.line].erase(state.caret.chr, textLines[state.caret.line].size()-state.caret.chr);
-			textLines.insert(textLines.begin()+state.caret.line+1, afterCaret);
-			state.caret.line++;
-			state.caret.chr=0;
-		}
+		// Normal enter behavior
+		string afterCaret = textLines[state.caret.line].substr(state.caret.chr, textLines[state.caret.line].size());
+		textLines[state.caret.line].erase(state.caret.chr, textLines[state.caret.line].size()-state.caret.chr);
+		textLines.insert(textLines.begin()+state.caret.line+1, afterCaret);
+		state.caret.line++;
+		state.caret.chr=0;
 		state.desiredChr=state.caret.chr;
 		bringViewToCaret();
 	}
@@ -499,7 +507,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 		return;
 	}
 
-	ofLog() << "Key Released = "<<key;
+//	ofLog() << "Key Released = "<<key;
 	switch (key) {
 		case OF_KEY_SHIFT:
 			bShiftPressed=false;
@@ -514,9 +522,12 @@ void ofxInterfaceEditor::keyReleased(int key)
 	}
 }
 
-void ofxInterfaceEditor::vscroll(float amount)
+void ofxInterfaceEditor::vscroll(int x, int y, float amount)
 {
-	state.targetView.y -= 2*amount;
+	if (!contains(toLocal(ofVec2f(x,y)))) {
+		return;
+	}
+	state.targetView.y -= 4*amount;
 	limitView();
 }
 
@@ -556,7 +567,7 @@ void ofxInterfaceEditor::drawTextEditor()
 
 	if (config.bTitle) {
 		if (config.borderCorner>0.1) {
-			float barH = bCollapsed?config.fontSize:config.titleBarHeight+2*config.borderCorner;
+			float barH = bCollapsed?config.fontSize:config.titleBarHeight+getHeight()+0.5*config.borderWidth;
 			ofxNanoVG::one().fillRoundedRect(-halfBW, -config.titleBarHeight, getWidth()+config.borderWidth, barH, config.borderCorner, config.borderColor);
 		}
 		else {
@@ -564,7 +575,7 @@ void ofxInterfaceEditor::drawTextEditor()
 		}
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
 		ofxNanoVG::one().setFillColor(config.bgColor);
-		ofxNanoVG::one().drawText(font, 6, -config.titleBarHeight, config.titleString, config.fontSize);
+		ofxNanoVG::one().drawText(font, 6, -config.titleBarHeight-config.borderWidth, config.titleString, config.fontSize);
 
 		// Draw collapse button
 		ofVec2f vec(0, -0.4*config.fontSize);
@@ -725,14 +736,15 @@ void ofxInterfaceEditor::drawTextEditor()
 	//////////////////////////////
 	// DRAW FRAME
 	//////////////////////////////
-
-	if (config.borderCorner>0.1) {
-		// Rounded corners
-		ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.borderColor, config.borderWidth);
-	}
-	else {
-		// Sharp corners
-		ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), config.borderColor, config.borderWidth);
+	if (!config.bTitle) {
+		if (config.borderCorner>0.1) {
+			// Rounded corners
+			ofxNanoVG::one().strokeRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.borderColor, config.borderWidth);
+		}
+		else {
+			// Sharp corners
+			ofxNanoVG::one().strokeRect(0, 0, getWidth(), getHeight(), config.borderColor, config.borderWidth);
+		}
 	}
 }
 
@@ -1001,6 +1013,16 @@ string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
 	return str.substr(bpos, epos-bpos);
 }
 
+ofxInterfaceEditor::caret_t ofxInterfaceEditor::getCaret()
+{
+	return state.caret;
+}
+
+void ofxInterfaceEditor::flashSelectedText(float time)
+{
+	copyTimer = time;
+}
+
 void ofxInterfaceEditor::pushUndoState()
 {
 	state.text = getText();
@@ -1037,4 +1059,11 @@ void ofxInterfaceEditor::popRedoState()
 	state = redoStates.top();
 	redoStates.pop();
 	setText(state.text);
+}
+
+bool ofxInterfaceEditor::fireEvent(ofEvent<ofxInterfaceEditor::EventArgs> &event)
+{
+	struct EventArgs args{this,true};
+	ofNotifyEvent(event, args, this);
+	return args.continueNormalBehavior;
 }
