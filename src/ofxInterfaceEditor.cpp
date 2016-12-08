@@ -680,12 +680,15 @@ void ofxInterfaceEditor::drawTextEditor()
 		ofxNanoVG::one().disableScissor();
 	}
 
-	
+
+	// enable scissors for the draw calls below, limiting to visible text area
+	ofRectangle textWindow(halfBW+config.lineNumbersWidth+0.5*config.pad.x, halfBW, getWidth()-config.borderWidth-config.lineNumbersWidth-0.5*config.pad.x, getHeight()-config.borderWidth);
+	ofxNanoVG::one().enableScissor(textWindow.x, textWindow.y, textWindow.width, textWindow.height);
+
 	//////////////////////////////
 	// DRAW TEXT
 	//////////////////////////////
 	y=halfBW;
-	ofxNanoVG::one().enableScissor(halfBW+config.lineNumbersWidth, halfBW, getWidth()-config.borderWidth-config.lineNumbersWidth, getHeight()-config.borderWidth);
 	ofPushMatrix();
 	ofTranslate(-view.x, -frac*config.fontSize);
 	ofxNanoVG::one().applyOFMatrix();
@@ -700,10 +703,6 @@ void ofxInterfaceEditor::drawTextEditor()
 
 	ofPopMatrix();
 	ofxNanoVG::one().applyOFMatrix();
-	ofxNanoVG::one().disableScissor();
-
-
-	ofxNanoVG::one().enableScissor(halfBW+config.lineNumbersWidth, halfBW, getWidth()-config.borderWidth-config.lineNumbersWidth, getHeight()-config.borderWidth);
 
 	///////////////////////////////
 	// DRAW SELECTION
@@ -761,6 +760,7 @@ void ofxInterfaceEditor::drawTextEditor()
 		ofxNanoVG::one().fillRect(cPos.x-1, cPos.y, 2, config.fontSize, config.fontColor);
 	}
 
+	// disable scissors
 	ofxNanoVG::one().disableScissor();
 
 	//////////////////////////////
