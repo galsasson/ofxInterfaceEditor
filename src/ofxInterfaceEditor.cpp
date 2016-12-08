@@ -93,7 +93,8 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	config.bgColor = ofxJsonParser::parseColor(configJson["background-color"]);
 	config.borderColor = ofxJsonParser::parseColor(configJson["border-color"]);
 	config.selectionColor = ofxJsonParser::parseColor(configJson["selection-color"]);
-	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", config.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "b", config.fontSize).width;
+	ofxNanoVG::one().resetMatrix();
+	float lw = ofxNanoVG::one().getTextBounds(font, 0, 0, "ab", config.fontSize).width - ofxNanoVG::one().getTextBounds(font, 0, 0, "a", config.fontSize).width;
 	config.letterSize = ofVec2f(lw, config.fontSize);
 	config.bSpecialEnter = ofxJsonParser::parseBool(configJson["special-enter"]);
 	config.bDraggable = ofxJsonParser::parseBool(configJson["draggable"]);
