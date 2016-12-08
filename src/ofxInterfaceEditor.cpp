@@ -284,6 +284,11 @@ void ofxInterfaceEditor::keyPressed(int key)
 	else if (key >= OF_KEY_LEFT && key <= OF_KEY_END) {
 		switch (key) {
 			case OF_KEY_LEFT:
+				if (bCommandKeyPressed) {
+					state.caret.chr = 0;
+					state.desiredChr=state.caret.chr;
+					break;
+				}
 				state.caret.chr--;
 				if (state.caret.chr < 0) {
 					if (state.caret.line>0) {
@@ -300,6 +305,11 @@ void ofxInterfaceEditor::keyPressed(int key)
 				}
 				break;
 			case OF_KEY_RIGHT:
+				if (bCommandKeyPressed) {
+					state.caret.chr = textLines[state.caret.line].size();
+					state.desiredChr=state.caret.chr;
+					break;
+				}
 				state.caret.chr++;
 				if (state.caret.chr > textLines[state.caret.line].size()) {
 					if (state.caret.line < textLines.size()-1) {
