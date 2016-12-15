@@ -202,6 +202,9 @@ void ofxInterfaceEditor::setText(const string &text, bool clearUndo)
 	state.caret.line = state.caret.line<0?0:state.caret.line>textLines.size()-1?textLines.size()-1:state.caret.line;
 	state.caret.chr = state.caret.chr<0?0:state.caret.chr>textLines[state.caret.line].length()?textLines[state.caret.line].length():state.caret.chr;
 
+	// clear select state
+	state.selection.active = false;
+
 	bringViewToCaret();
 	limitView();
 }
