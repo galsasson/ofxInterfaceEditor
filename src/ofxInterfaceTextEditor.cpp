@@ -1,20 +1,20 @@
 //
-//  ofxInterfaceEditor.cpp
+//  ofxInterfaceTextEditor.cpp
 //  example_single
 //
 //  Created by Gal Sasson on 10/9/16.
 //
 //
 
-#include "ofxInterfaceEditor.h"
+#include "ofxInterfaceTextEditor.h"
 #include "ofxJsonParser.h"
 
-ofxInterfaceEditor::~ofxInterfaceEditor()
+ofxInterfaceTextEditor::~ofxInterfaceTextEditor()
 {
 
 }
 
-ofxInterfaceEditor::ofxInterfaceEditor()
+ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 {
 	// default config
 	configJson = Json::objectValue;
@@ -44,9 +44,9 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	ofxNanoVG::one().setup();
 
 	// register touch events
-	ofAddListener(eventTouchDown, this, &ofxInterfaceEditor::onTouchDown);
-	ofAddListener(eventTouchMove, this, &ofxInterfaceEditor::onTouchMove);
-	ofAddListener(eventTouchUp, this, &ofxInterfaceEditor::onTouchUp);
+	ofAddListener(eventTouchDown, this, &ofxInterfaceTextEditor::onTouchDown);
+	ofAddListener(eventTouchMove, this, &ofxInterfaceTextEditor::onTouchMove);
+	ofAddListener(eventTouchUp, this, &ofxInterfaceTextEditor::onTouchUp);
 
 	// init variables
 	fboPad =			256;
@@ -68,7 +68,7 @@ ofxInterfaceEditor::ofxInterfaceEditor()
 	setConfig(configJson);
 }
 
-void ofxInterfaceEditor::setConfig(const Json::Value& conf)
+void ofxInterfaceTextEditor::setConfig(const Json::Value& conf)
 {
 	ofxJsonParser::objectMerge(configJson, conf);
 
@@ -121,27 +121,27 @@ void ofxInterfaceEditor::setConfig(const Json::Value& conf)
 	bDirty = true;
 }
 
-void ofxInterfaceEditor::setTitle(const string& name)
+void ofxInterfaceTextEditor::setTitle(const string& name)
 {
 	config.titleString = name;
 	setName(name);
 }
 
-void ofxInterfaceEditor::loadConfig(const string& filename)
+void ofxInterfaceTextEditor::loadConfig(const string& filename)
 {
 	if (!ofFile(filename).exists()) {
-		ofLogError("ofxInterfaceEditor") << "could not find the config file: "<<filename;
+		ofLogError("ofxInterfaceTextEditor") << "could not find the config file: "<<filename;
 		return;
 	}
 	ofxJSONElement json;
 	if (!json.open(filename)) {
-		ofLogError("ofxInterfaceEditor") << "could not parse the config file: "<<filename;
+		ofLogError("ofxInterfaceTextEditor") << "could not parse the config file: "<<filename;
 		return;
 	}
 	setConfig(json);
 }
 
-void ofxInterfaceEditor::update(float dt)
+void ofxInterfaceTextEditor::update(float dt)
 {
 	ofVec2f offset = (state.targetView.getPosition()-view.getPosition());
 	view.translate(0.5f*offset);
@@ -163,13 +163,13 @@ void ofxInterfaceEditor::update(float dt)
 	}
 }
 
-void ofxInterfaceEditor::draw()
+void ofxInterfaceTextEditor::draw()
 {
 	ofSetColor(255);
 	lastRender.draw(-fboPad/2, -fboPad/2);
 }
 
-bool ofxInterfaceEditor::contains(const ofVec3f& global)
+bool ofxInterfaceTextEditor::contains(const ofVec3f& global)
 {
 	if (!config.bTitle) {
 		return Node::contains(global);
@@ -183,7 +183,7 @@ bool ofxInterfaceEditor::contains(const ofVec3f& global)
 	return true;
 }
 
-void ofxInterfaceEditor::setText(const string &text, bool clearUndo)
+void ofxInterfaceTextEditor::setText(const string &text, bool clearUndo)
 {
 	if (clearUndo) {
 		undoStates = std::stack<editor_state_t>();
@@ -209,7 +209,7 @@ void ofxInterfaceEditor::setText(const string &text, bool clearUndo)
 	limitView();
 }
 
-string ofxInterfaceEditor::getText()
+string ofxInterfaceTextEditor::getText()
 {
 	string str;
 	for (int i=0; i<textLines.size(); i++) {
@@ -221,7 +221,7 @@ string ofxInterfaceEditor::getText()
 	return str;
 }
 
-string ofxInterfaceEditor::getLine(size_t i)
+string ofxInterfaceTextEditor::getLine(size_t i)
 {
 	if (i<textLines.size()) {
 		return textLines[i];
@@ -229,18 +229,18 @@ string ofxInterfaceEditor::getLine(size_t i)
 	return "";
 }
 
-void ofxInterfaceEditor::loadFromFile(const string &filename)
+void ofxInterfaceTextEditor::loadFromFile(const string &filename)
 {
 	ofFile file(filename);
 	if (!file.exists()) {
-		ofLogError("ofxInterfaceEditor") << "No such file: "<<filename;
+		ofLogError("ofxInterfaceTextEditor") << "No such file: "<<filename;
 		return;
 	}
 
 	setText(file.readToBuffer().getText());
 }
 
-void ofxInterfaceEditor::saveToFile(const string &filename)
+void ofxInterfaceTextEditor::saveToFile(const string &filename)
 {
 	ofFile file(filename, ofFile::WriteOnly);
 	ofBuffer buffer;
@@ -248,7 +248,7 @@ void ofxInterfaceEditor::saveToFile(const string &filename)
 	file.writeFromBuffer(buffer);
 }
 
-void ofxInterfaceEditor::appendString(const string &str)
+void ofxInterfaceTextEditor::appendString(const string &str)
 {
 	string text = getText();
 	size_t cPos = toTextPos(state.caret);
@@ -259,14 +259,14 @@ void ofxInterfaceEditor::appendString(const string &str)
 	}
 }
 
-void ofxInterfaceEditor::appendChar(char ch)
+void ofxInterfaceTextEditor::appendChar(char ch)
 {
 	string str;
 	str += ch;
 	appendString(str);
 }
 
-void ofxInterfaceEditor::keyPressed(int key)
+void ofxInterfaceTextEditor::keyPressed(int key)
 {
 	if (bCollapsed) {
 		return;
@@ -534,7 +534,7 @@ void ofxInterfaceEditor::keyPressed(int key)
 	caretBlink=0;
 }
 
-void ofxInterfaceEditor::keyReleased(int key)
+void ofxInterfaceTextEditor::keyReleased(int key)
 {
 	if (bCollapsed) {
 		return;
@@ -555,7 +555,7 @@ void ofxInterfaceEditor::keyReleased(int key)
 	}
 }
 
-void ofxInterfaceEditor::vscroll(int x, int y, float amount)
+void ofxInterfaceTextEditor::vscroll(int x, int y, float amount)
 {
 	if (!contains(ofVec2f(x,y))) {
 		return;
@@ -564,7 +564,7 @@ void ofxInterfaceEditor::vscroll(int x, int y, float amount)
 	limitView();
 }
 
-void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
+void ofxInterfaceTextEditor::renderToFbo(ofFbo& fbo)
 {
 	// render
 	allocateFbo(fbo);
@@ -591,7 +591,7 @@ void ofxInterfaceEditor::renderToFbo(ofFbo& fbo)
 	fbo.getTexture().generateMipmap();
 }
 
-void ofxInterfaceEditor::drawTextEditor()
+void ofxInterfaceTextEditor::drawTextEditor()
 {
 	float halfBW = 0.5*config.borderWidth;
 	///////////////////////////////////
@@ -781,7 +781,7 @@ void ofxInterfaceEditor::drawTextEditor()
 	}
 }
 
-void ofxInterfaceEditor::allocateFbo(ofFbo& fbo)
+void ofxInterfaceTextEditor::allocateFbo(ofFbo& fbo)
 {
 	int reqW = int(getWidth()) + fboPad;
 	int reqH = int(getHeight()) + fboPad;
@@ -800,7 +800,7 @@ void ofxInterfaceEditor::allocateFbo(ofFbo& fbo)
 	}
 }
 
-ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p, ofRectangle& _view)
+ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(ofVec2f p, ofRectangle& _view)
 {
 	struct caret_t c{
 		0,
@@ -834,12 +834,12 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(ofVec2f p, ofRectangle& 
 	return c;
 }
 
-ofVec2f ofxInterfaceEditor::toNode(const ofxInterfaceEditor::caret_t& _caret, ofRectangle& _view)
+ofVec2f ofxInterfaceTextEditor::toNode(const ofxInterfaceTextEditor::caret_t& _caret, ofRectangle& _view)
 {
 	return toNode(_caret.line, _caret.chr, _view);
 }
 
-ofVec2f ofxInterfaceEditor::toNode(int line, int chr, ofRectangle& _view)
+ofVec2f ofxInterfaceTextEditor::toNode(int line, int chr, ofRectangle& _view)
 {
 	ofVec2f p(chr*config.letterSize.x, line*config.fontSize);
 	p.x += 0.5*config.borderWidth+config.pad.x;
@@ -854,7 +854,7 @@ ofVec2f ofxInterfaceEditor::toNode(int line, int chr, ofRectangle& _view)
 	return p;
 }
 
-size_t ofxInterfaceEditor::toTextPos(const caret_t& c)
+size_t ofxInterfaceTextEditor::toTextPos(const caret_t& c)
 {
 	size_t pos=0;
 	for (unsigned int l=0; l<c.line && l<textLines.size(); l++) {
@@ -864,7 +864,7 @@ size_t ofxInterfaceEditor::toTextPos(const caret_t& c)
 	return pos;
 }
 
-ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
+ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(size_t textPos)
 {
 	caret_t c{0,0};
 	while (textPos>0 && textLines.size()>c.line) {
@@ -882,7 +882,7 @@ ofxInterfaceEditor::caret_t ofxInterfaceEditor::toCaret(size_t textPos)
 	return c;
 }
 
-void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
+void ofxInterfaceTextEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
 	if (config.bTitle && local.y < 0) {
@@ -904,7 +904,7 @@ void ofxInterfaceEditor::onTouchDown(TouchEvent& event)
 	}
 }
 
-void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
+void ofxInterfaceTextEditor::onTouchMove(TouchEvent& event)
 {
 	if (bInDrag) {
 		ofVec3f m = event.position-event.prevPosition;
@@ -916,7 +916,7 @@ void ofxInterfaceEditor::onTouchMove(TouchEvent& event)
 	}
 }
 
-void ofxInterfaceEditor::onTouchUp(TouchEvent& event)
+void ofxInterfaceTextEditor::onTouchUp(TouchEvent& event)
 {
 	if (bInDrag) {
 		bInDrag=false;
@@ -927,7 +927,7 @@ void ofxInterfaceEditor::onTouchUp(TouchEvent& event)
 	}
 }
 
-void ofxInterfaceEditor::clearSelection()
+void ofxInterfaceTextEditor::clearSelection()
 {
 	caret_t sc = state.selection.begin;
 	caret_t	ec = state.selection.end;
@@ -960,7 +960,7 @@ void ofxInterfaceEditor::clearSelection()
 	state.selection.active = false;
 }
 
-float ofxInterfaceEditor::getLineNumberWidth()
+float ofxInterfaceTextEditor::getLineNumberWidth()
 {
 	if (!config.bLineNumbers) {
 		return 0;
@@ -976,7 +976,7 @@ float ofxInterfaceEditor::getLineNumberWidth()
 	return w;
 }
 
-void ofxInterfaceEditor::bringViewToCaret()
+void ofxInterfaceTextEditor::bringViewToCaret()
 {
 	// Update view
 	ofVec2f cPos = toNode(state.caret, state.targetView);
@@ -1003,7 +1003,7 @@ void ofxInterfaceEditor::bringViewToCaret()
 	}
 }
 
-void ofxInterfaceEditor::limitView()
+void ofxInterfaceTextEditor::limitView()
 {
 	if (state.targetView.y < 0) {
 		state.targetView.y = 0;
@@ -1022,7 +1022,7 @@ void ofxInterfaceEditor::limitView()
 	}
 }
 
-string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
+string ofxInterfaceTextEditor::getSelectedText(size_t* _bpos, size_t* _epos)
 {
 	if (!state.selection.active) {
 		return "";
@@ -1046,28 +1046,28 @@ string ofxInterfaceEditor::getSelectedText(size_t* _bpos, size_t* _epos)
 	return str.substr(bpos, epos-bpos);
 }
 
-ofxInterfaceEditor::caret_t ofxInterfaceEditor::getCaret()
+ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::getCaret()
 {
 	return state.caret;
 }
 
-size_t ofxInterfaceEditor::getCaretPos()
+size_t ofxInterfaceTextEditor::getCaretPos()
 {
 	return toTextPos(state.caret);
 }
 
-void ofxInterfaceEditor::flashSelectedText(float time)
+void ofxInterfaceTextEditor::flashSelectedText(float time)
 {
 	copyTimer = time;
 }
 
-void ofxInterfaceEditor::pushUndoState()
+void ofxInterfaceTextEditor::pushUndoState()
 {
 	state.text = getText();
 	undoStates.push(state);
 }
 
-void ofxInterfaceEditor::popUndoState()
+void ofxInterfaceTextEditor::popUndoState()
 {
 	if (undoStates.empty()) {
 		return;
@@ -1080,13 +1080,13 @@ void ofxInterfaceEditor::popUndoState()
 	setText(state.text);
 }
 
-void ofxInterfaceEditor::pushRedoState()
+void ofxInterfaceTextEditor::pushRedoState()
 {
 	state.text = getText();
 	redoStates.push(state);
 }
 
-void ofxInterfaceEditor::popRedoState()
+void ofxInterfaceTextEditor::popRedoState()
 {
 	if (redoStates.empty()) {
 		return;
@@ -1099,7 +1099,7 @@ void ofxInterfaceEditor::popRedoState()
 	setText(state.text);
 }
 
-bool ofxInterfaceEditor::fireEvent(ofEvent<ofxInterfaceEditor::EventArgs> &event)
+bool ofxInterfaceTextEditor::fireEvent(ofEvent<ofxInterfaceTextEditor::EventArgs> &event)
 {
 	struct EventArgs args{this,true};
 	ofNotifyEvent(event, args, this);

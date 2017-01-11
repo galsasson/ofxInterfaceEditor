@@ -1,13 +1,13 @@
 //
-//  ofxInterfaceEditor.h
+//  ofxInterfaceTextEditor.h
 //  example_single
 //
 //  Created by Gal Sasson on 10/9/16.
 //
 //
 
-#ifndef ofxInterfaceEditor_h
-#define ofxInterfaceEditor_h
+#ifndef ofxInterfaceTextEditor_h
+#define ofxInterfaceTextEditor_h
 
 #include "ofxInterface.h"
 #include "ofxJSON.h"
@@ -15,7 +15,7 @@
 
 using namespace ofxInterface;
 
-class ofxInterfaceEditor : public Node
+class ofxInterfaceTextEditor : public Node
 {
 public:
 	struct caret_t {
@@ -23,8 +23,8 @@ public:
 		int chr;
 	};
 
-	~ofxInterfaceEditor();
-	ofxInterfaceEditor();
+	~ofxInterfaceTextEditor();
+	ofxInterfaceTextEditor();
 
 	void loadConfig(const string& filename);	// load config from file
 	void setConfig(const Json::Value& config);	// set editor config object
@@ -45,7 +45,7 @@ public:
 
 	// get editor events
 	struct EventArgs {
-		ofxInterfaceEditor* editor;
+		ofxInterfaceTextEditor* editor;
 		bool continueNormalBehavior;
 	};
 	ofEvent<EventArgs> eventEnterDown;
@@ -146,4 +146,4 @@ protected:
 	bool fireEvent(ofEvent<EventArgs>& event);
 };
 
-#endif /* ofxInterfaceEditor_h */
+#endif /* ofxInterfaceTextEditor_h */
