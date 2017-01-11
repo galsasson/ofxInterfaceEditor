@@ -42,14 +42,14 @@ Json::Value ofApp::getEditorConfig3()
 	config["width"] = 40;
 	config["lines"] = 10;
 	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 22;
+	config["font-size"] = 48;
 	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 1;
-	config["border-corner"] = 0;
+	config["border-width"] = 30;
+	config["border-corner"] = 20;
 	config["pad"][0] =					4;
 	config["pad"][1] =					0;
 	config["background-color"] = "#222222 100%";
-	config["title"] = false;
+	config["title"] = true;
 	config["draggable"] = true;
 	config["line-numbers"] = true;
 	return config;

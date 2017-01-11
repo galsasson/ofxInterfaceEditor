@@ -658,14 +658,14 @@ void ofxInterfaceTextEditor::drawTextEditor()
 		// fill bar
 		if (config.borderCorner>0.1) {
 			if (config.bTitle) {
-				ofxNanoVG::one().fillRoundedRect(halfBW, config.titleBarHeight+halfBW, config.lineNumbersWidth+0.5*config.pad.x, getHeight(), config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+				ofxNanoVG::one().fillRoundedRect(halfBW, config.titleBarHeight+halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth-config.titleBarHeight, 0, 0, 0, config.borderCorner, config.lineNumbersBGColor);
 			}
 			else {
-				ofxNanoVG::one().fillRoundedRect(halfBW, halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+				ofxNanoVG::one().fillRoundedRect(halfBW, config.titleBarHeight+halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth-config.titleBarHeight, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
 			}
 		}
 		else {
-			ofxNanoVG::one().fillRect(halfBW, halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth, config.lineNumbersBGColor);
+			ofxNanoVG::one().fillRect(halfBW, config.titleBarHeight+halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth-config.titleBarHeight, config.lineNumbersBGColor);
 		}
 
 		// draw numbers
