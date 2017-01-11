@@ -15,10 +15,13 @@ void ofApp::setup(){
 	config["lines"] = 10;
 	config["font"] = "Menlo-Regular.ttf";
 	config["font-size"] = 22;
-	config["border-width"] = 20;
-	config["pad"][0] =					20;
+	config["border-color"] = "#ffffff 100%";
+	config["border-width"] = 4;
+	config["border-corner"] = 0;
+	config["pad"][0] =					6;
 	config["pad"][1] =					0;
-	config["background-color"] = "#ff0000";
+	config["background-color"] = "#222222 100%";
+	config["title"] = true;
 	editor.setConfig(config);
 
 	// set editor position at 50x50
@@ -78,7 +81,7 @@ void ofApp::onSaveClicked(ofxInterface::TouchEvent &event)
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	editor.keyPressed(key);
-	if (key == 'b') {
+	if (key == 'B') {
 		bDebug = !bDebug;
 	}
 }
