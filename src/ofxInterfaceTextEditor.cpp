@@ -642,7 +642,6 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	}
 
 	ofxNanoVG::one().setFillColor(config.fontColor);
-	float y=halfBW;
 	// draw only visible part of text
 	double firstLine;
 	double frac = modf(view.y/config.fontSize, &firstLine);
@@ -658,19 +657,25 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	if (config.bLineNumbers) {
 		// fill bar
 		if (config.borderCorner>0.1) {
-			ofxNanoVG::one().fillRoundedRect(halfBW, 0, config.lineNumbersWidth+0.5*config.pad.x, getHeight(), config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+			if (config.bTitle) {
+				ofxNanoVG::one().fillRoundedRect(halfBW, config.titleBarHeight+halfBW, config.lineNumbersWidth+0.5*config.pad.x, getHeight(), config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+			}
+			else {
+				ofxNanoVG::one().fillRoundedRect(halfBW, halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth, config.borderCorner, 0, 0, config.borderCorner, config.lineNumbersBGColor);
+			}
 		}
 		else {
-			ofxNanoVG::one().fillRect(halfBW, 0, config.lineNumbersWidth+0.5*config.pad.x, getHeight(), config.lineNumbersBGColor);
+			ofxNanoVG::one().fillRect(halfBW, halfBW, config.lineNumbersWidth+halfBW, getHeight()-config.borderWidth, config.lineNumbersBGColor);
 		}
 
 		// draw numbers
-		ofxNanoVG::one().enableScissor(halfBW, halfBW, getWidth()-config.borderWidth, getHeight()-config.borderWidth);
-		y=halfBW-frac*config.fontSize;
+		ofxNanoVG::one().enableScissor(config.borderWidth, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth, getHeight()-config.titleBarHeight-2*config.borderWidth-config.pad.y);
+		float y=config.titleBarHeight+config.borderWidth+0.5*config.fontSize-frac*config.fontSize;
+		float x = config.borderWidth+config.lineNumbersWidth-2;
 		for (int i=first.line; i<=last.line; i++) {
 			ofxNanoVG::one().setFillColor(config.lineNumbersColor);
 			ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_RIGHT, ofxNanoVG::NVG_ALIGN_MIDDLE);
-			ofxNanoVG::one().drawText(font, config.lineNumbersWidth, config.pad.y+y+0.5*config.fontSize, ofToString(i+1), 0.8*config.fontSize);
+			ofxNanoVG::one().drawText(font, x, y, ofToString(i+1), 0.8*config.fontSize);
 			y += config.fontSize;
 		}
 		ofxNanoVG::one().disableScissor();
@@ -684,7 +689,7 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	//////////////////////////////
 	// DRAW TEXT
 	//////////////////////////////
-	y = config.titleBarHeight + config.borderWidth + config.pad.y;
+	float y = config.titleBarHeight + config.borderWidth + config.pad.y;
 	float x = config.borderWidth+config.lineNumbersWidth+config.pad.x;
 	ofPushMatrix();
 	ofTranslate(-view.x, -frac*config.fontSize);
@@ -967,7 +972,7 @@ float ofxInterfaceTextEditor::getLineNumberWidth()
 		return 0;
 	}
 
-	float w=2;
+	float w=5;
 	int linesNum = textLines.size();
 	while (linesNum>0) {
 		w += 0.8*config.letterSize.x;

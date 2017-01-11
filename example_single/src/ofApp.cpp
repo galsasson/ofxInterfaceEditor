@@ -44,13 +44,14 @@ Json::Value ofApp::getEditorConfig3()
 	config["font"] = "Menlo-Regular.ttf";
 	config["font-size"] = 22;
 	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 4;
-	config["border-corner"] = 8;
+	config["border-width"] = 1;
+	config["border-corner"] = 0;
 	config["pad"][0] =					4;
 	config["pad"][1] =					0;
 	config["background-color"] = "#222222 100%";
-	config["title"] = true;
+	config["title"] = false;
 	config["draggable"] = true;
+	config["line-numbers"] = true;
 	return config;
 }
 
