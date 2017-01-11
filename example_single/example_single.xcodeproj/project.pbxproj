@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		2A256DBE1DE4C16A009F1C43 /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A256DB91DE4BC91009F1C43 /* openFrameworksDebug.a */; };
-		2A5542A51DAC724100E6E074 /* ofxInterfaceEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542A31DAC724100E6E074 /* ofxInterfaceEditor.cpp */; };
 		2A5542D21DAC726100E6E074 /* BitmapTextButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542BE1DAC726100E6E074 /* BitmapTextButton.cpp */; };
 		2A5542D31DAC726100E6E074 /* SolidColorPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542C01DAC726100E6E074 /* SolidColorPanel.cpp */; };
 		2A5542D41DAC726100E6E074 /* TextureButton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542C21DAC726100E6E074 /* TextureButton.cpp */; };
@@ -17,9 +16,10 @@
 		2A5542D71DAC726100E6E074 /* TouchManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542C91DAC726100E6E074 /* TouchManager.cpp */; };
 		2A5542D81DAC726100E6E074 /* VirtualTouch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5542CB1DAC726100E6E074 /* VirtualTouch.cpp */; };
 		2A55431C1DAC72B000E6E074 /* jsoncpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A55430A1DAC72B000E6E074 /* jsoncpp.cpp */; };
-		2A55431E1DAC72B000E6E074 /* ofxJSONElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A55430E1DAC72B000E6E074 /* ofxJSONElement.cpp */; };
 		2A5543741DAC732300E6E074 /* nanovg.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A55435E1DAC732300E6E074 /* nanovg.c */; };
 		2A5543761DAC732300E6E074 /* ofxNanoVG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5543661DAC732300E6E074 /* ofxNanoVG.cpp */; };
+		2A8149291E26AAB000135792 /* ofxInterfaceTextEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A8149271E26AAB000135792 /* ofxInterfaceTextEditor.cpp */; };
+		2A81492B1E26AAEF00135792 /* ofxJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A81492A1E26AAEF00135792 /* ofxJSON.cpp */; };
 		2AACCFE41DECBBB4008B00D6 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 2AACCFE01DECBBB4008B00D6 /* README.md */; };
 		2AACCFE51DECBBB4008B00D6 /* ofxJsonParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AACCFE21DECBBB4008B00D6 /* ofxJsonParser.cpp */; };
 		2AACCFE81DEE152F008B00D6 /* LambdaView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AACCFE61DEE152F008B00D6 /* LambdaView.cpp */; };
@@ -57,8 +57,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2A5542A31DAC724100E6E074 /* ofxInterfaceEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxInterfaceEditor.cpp; sourceTree = "<group>"; };
-		2A5542A41DAC724100E6E074 /* ofxInterfaceEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxInterfaceEditor.h; sourceTree = "<group>"; };
 		2A5542BE1DAC726100E6E074 /* BitmapTextButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitmapTextButton.cpp; sourceTree = "<group>"; };
 		2A5542BF1DAC726100E6E074 /* BitmapTextButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitmapTextButton.h; sourceTree = "<group>"; };
 		2A5542C01DAC726100E6E074 /* SolidColorPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SolidColorPanel.cpp; sourceTree = "<group>"; };
@@ -78,8 +76,6 @@
 		2A5543081DAC72B000E6E074 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json.h; sourceTree = "<group>"; };
 		2A55430A1DAC72B000E6E074 /* jsoncpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jsoncpp.cpp; sourceTree = "<group>"; };
 		2A55430D1DAC72B000E6E074 /* ofxJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxJSON.h; sourceTree = "<group>"; };
-		2A55430E1DAC72B000E6E074 /* ofxJSONElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxJSONElement.cpp; sourceTree = "<group>"; };
-		2A55430F1DAC72B000E6E074 /* ofxJSONElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxJSONElement.h; sourceTree = "<group>"; };
 		2A5543321DAC732300E6E074 /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		2A5543331DAC732300E6E074 /* nanosvgrast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvgrast.h; sourceTree = "<group>"; };
 		2A55435D1DAC732300E6E074 /* fontstash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fontstash.h; sourceTree = "<group>"; };
@@ -91,6 +87,9 @@
 		2A5543631DAC732300E6E074 /* stb_truetype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_truetype.h; sourceTree = "<group>"; };
 		2A5543661DAC732300E6E074 /* ofxNanoVG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxNanoVG.cpp; sourceTree = "<group>"; };
 		2A5543671DAC732300E6E074 /* ofxNanoVG.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxNanoVG.h; sourceTree = "<group>"; };
+		2A8149271E26AAB000135792 /* ofxInterfaceTextEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxInterfaceTextEditor.cpp; sourceTree = "<group>"; };
+		2A8149281E26AAB000135792 /* ofxInterfaceTextEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxInterfaceTextEditor.h; sourceTree = "<group>"; };
+		2A81492A1E26AAEF00135792 /* ofxJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxJSON.cpp; sourceTree = "<group>"; };
 		2AACCFDF1DECBBB4008B00D6 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2AACCFE01DECBBB4008B00D6 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		2AACCFE21DECBBB4008B00D6 /* ofxJsonParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxJsonParser.cpp; sourceTree = "<group>"; };
@@ -127,19 +126,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		2A5542A11DAC723000E6E074 /* ofxInterfaceEditor */ = {
+		2A5542A11DAC723000E6E074 /* ofxInterfaceTextEditor */ = {
 			isa = PBXGroup;
 			children = (
 				2A5542A21DAC724100E6E074 /* src */,
 			);
-			name = ofxInterfaceEditor;
+			name = ofxInterfaceTextEditor;
 			sourceTree = "<group>";
 		};
 		2A5542A21DAC724100E6E074 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				2A5542A31DAC724100E6E074 /* ofxInterfaceEditor.cpp */,
-				2A5542A41DAC724100E6E074 /* ofxInterfaceEditor.h */,
+				2A8149271E26AAB000135792 /* ofxInterfaceTextEditor.cpp */,
+				2A8149281E26AAB000135792 /* ofxInterfaceTextEditor.h */,
 			);
 			name = src;
 			path = ../src;
@@ -241,9 +240,8 @@
 		2A55430C1DAC72B000E6E074 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2A81492A1E26AAEF00135792 /* ofxJSON.cpp */,
 				2A55430D1DAC72B000E6E074 /* ofxJSON.h */,
-				2A55430E1DAC72B000E6E074 /* ofxJSONElement.cpp */,
-				2A55430F1DAC72B000E6E074 /* ofxJSONElement.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -342,7 +340,7 @@
 				2A55431F1DAC732300E6E074 /* ofxNanoVG */,
 				2A5542DC1DAC72B000E6E074 /* ofxJSON */,
 				2A5542A61DAC726100E6E074 /* ofxInterface */,
-				2A5542A11DAC723000E6E074 /* ofxInterfaceEditor */,
+				2A5542A11DAC723000E6E074 /* ofxInterfaceTextEditor */,
 			);
 			name = local_addons;
 			sourceTree = "<group>";
@@ -473,7 +471,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A5542A51DAC724100E6E074 /* ofxInterfaceEditor.cpp in Sources */,
 				2A5543741DAC732300E6E074 /* nanovg.c in Sources */,
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
 				2A55431C1DAC72B000E6E074 /* jsoncpp.cpp in Sources */,
@@ -482,12 +479,13 @@
 				2AACCFE51DECBBB4008B00D6 /* ofxJsonParser.cpp in Sources */,
 				2A5542D81DAC726100E6E074 /* VirtualTouch.cpp in Sources */,
 				2A5542D51DAC726100E6E074 /* Node.cpp in Sources */,
-				2A55431E1DAC72B000E6E074 /* ofxJSONElement.cpp in Sources */,
+				2A8149291E26AAB000135792 /* ofxInterfaceTextEditor.cpp in Sources */,
 				2A5542D61DAC726100E6E074 /* TouchEvent.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				2AACCFE81DEE152F008B00D6 /* LambdaView.cpp in Sources */,
 				2A5542D31DAC726100E6E074 /* SolidColorPanel.cpp in Sources */,
 				2AACCFE41DECBBB4008B00D6 /* README.md in Sources */,
+				2A81492B1E26AAEF00135792 /* ofxJSON.cpp in Sources */,
 				2A5542D41DAC726100E6E074 /* TextureButton.cpp in Sources */,
 				2A5542D21DAC726100E6E074 /* BitmapTextButton.cpp in Sources */,
 			);

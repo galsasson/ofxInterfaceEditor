@@ -107,7 +107,7 @@ void ofApp::mouseExited(int x, int y){
 //--------------------------------------------------------------
 void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY)
 {
-	editor.vscroll(scrollY);
+	editor.vscroll(x, y, scrollY);
 }
 
 //--------------------------------------------------------------
