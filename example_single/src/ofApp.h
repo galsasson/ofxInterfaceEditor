@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxInterfaceEditor.h"
+#include "ofxInterfaceTextEditor.h"
 #include "ofxInterface.h"
 
 using namespace ofxInterface;
@@ -30,7 +30,7 @@ class ofApp : public ofBaseApp{
 	void onSaveClicked(ofxInterface::TouchEvent& event);
 
 	Node scene;
-	ofxInterfaceEditor editor;
+	ofxInterfaceTextEditor editor;
 	bool bDebug;
 	
 };

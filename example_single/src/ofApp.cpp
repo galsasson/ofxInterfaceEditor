@@ -9,7 +9,7 @@ void ofApp::setup(){
 	TouchManager::one().setup(&scene);			// TouchManager should know about the scene
 	scene.setSize(ofGetWidth(), ofGetHeight());	// set scene size to window size
 
-	// configure the editor	(look at ofxInterfaceEditor constructor for the full list of config values)
+	// configure the editor	(look at ofxInterfaceTextEditor constructor for the full list of config values)
 	Json::Value config = Json::objectValue;
 	config["width"] = 40;
 	config["lines"] = 10;
