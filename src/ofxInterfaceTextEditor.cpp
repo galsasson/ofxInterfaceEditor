@@ -21,12 +21,12 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 	configJson["width"] =					80;	// in chars
 	configJson["lines"] =					20;	// in lines
 	configJson["max-lines"] =				-1;
-	configJson["pad"][0] =					0;
+	configJson["pad"][0] =					6;
 	configJson["pad"][1] =					0;
 	configJson["background-color"] =		"#111111 100%";
 	configJson["border-width"] =			2;
 	configJson["border-color"] =			"#ffffff 100%";
-	configJson["border-corner"] =			0;
+	configJson["border-corner"] =			14;
 	configJson["font"] =					"Inconsolata-Regular.ttf";
 	configJson["font-color"] =				"#ffffff 100%";
 	configJson["font-size"] =				22;
@@ -641,11 +641,11 @@ void ofxInterfaceTextEditor::drawTextEditor()
 
 	if (config.borderCorner>0.1) {
 		// Rounded corners
-		ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), getHeight(), config.borderCorner, config.bgColor);
+		ofxNanoVG::one().fillRoundedRect(halfBW, halfBW, getWidth()-config.borderWidth, getHeight()-config.borderWidth, config.borderCorner, config.bgColor);
 	}
 	else {
 		// Sharp corners
-		ofxNanoVG::one().fillRect(0, 0, getWidth(), getHeight(), config.bgColor);
+		ofxNanoVG::one().fillRect(halfBW, halfBW, getWidth()-config.borderWidth, getHeight()-config.borderWidth, config.bgColor);
 	}
 
 	ofxNanoVG::one().setFillColor(config.fontColor);
@@ -768,9 +768,9 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	ofxNanoVG::one().disableScissor();
 
 	//////////////////////////////
-	// DRAW FRAME
+	// DRAW BORDER
 	//////////////////////////////
-	if (!config.bTitle) {
+	if (config.borderWidth>0.01) {
 		if (config.borderCorner>0.1) {
 			// Rounded corners
 			ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW, getWidth()-config.borderWidth, getHeight()-config.borderWidth, config.borderCorner, config.borderColor, config.borderWidth);
@@ -812,7 +812,13 @@ ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(ofVec2f p, ofRec
 		p.x -= config.lineNumbersWidth;
 	}
 	p.x -= config.pad.x + config.borderWidth;
-	p.y -= config.pad.y + config.borderWidth;
+	p.y -= config.pad.y;
+	if (config.bTitle) {
+		p.y -= config.titleBarHeight;
+	}
+	else {
+		p.y -= config.borderWidth;
+	}
 	p.x += _view.x;
 	p.y += _view.y;
 
@@ -844,7 +850,13 @@ ofVec2f ofxInterfaceTextEditor::toNode(int line, int chr, ofRectangle& _view)
 {
 	ofVec2f p(chr*config.letterSize.x, line*config.fontSize);
 	p.x += config.borderWidth+config.pad.x;
-	p.y += config.borderWidth+config.pad.y;
+	p.y += config.pad.y;
+	if (config.bTitle) {
+		p.y += config.titleBarHeight;
+	}
+	else {
+		p.y += config.borderWidth;
+	}
 	p.x -= _view.x;
 	p.y -= _view.y;
 
@@ -991,7 +1003,7 @@ void ofxInterfaceTextEditor::bringViewToCaret()
 	}
 
 	// check x
-	float rightLimit = getWidth()-2*config.letterSize.x;
+	float rightLimit = getWidth()-config.borderWidth-2*config.letterSize.x;
 	float leftLimit = config.borderWidth+config.lineNumbersWidth+config.pad.x+5*config.letterSize.x;
 	if (cPos.x < leftLimit) {
 		state.targetView.x += cPos.x-leftLimit;
