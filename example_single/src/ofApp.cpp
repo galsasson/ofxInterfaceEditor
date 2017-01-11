@@ -15,6 +15,7 @@ void ofApp::setup(){
 	config["lines"] = 10;
 	config["font"] = "Menlo-Regular.ttf";
 	config["font-size"] = 22;
+	config["border-width"] = 10;
 	editor.setConfig(config);
 
 	// set editor position at 50x50
@@ -46,7 +47,12 @@ void ofApp::draw(){
 	ofBackground(0);
 	// render scene
 	scene.render();
+
+	ofSetColor(255, 0, 0);
+	ofNoFill();
+	ofDrawRectangle(editor.getX(), editor.getY(), editor.getWidth(), editor.getHeight());
 }
+
 
 //--------------------------------------------------------------
 void ofApp::onLoadClicked(ofxInterface::TouchEvent &event)
