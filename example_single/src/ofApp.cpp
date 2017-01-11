@@ -15,6 +15,7 @@ Json::Value ofApp::getEditorConfig1()
 	config["background-color"] = "#222222 100%";
 	config["title"] = true;
 	config["draggable"] = true;
+	config["line-numbers"] = true;
 	return config;
 }
 
@@ -28,7 +29,7 @@ Json::Value ofApp::getEditorConfig2()
 	config["border-color"] = "#ffffff 100%";
 	config["border-width"] = 0;
 	config["border-corner"] = 0;
-	config["pad"][0] =					20;
+	config["pad"][0] =					1;
 	config["pad"][1] =					0;
 	config["background-color"] = "#222222 100%";
 	config["title"] = false;
@@ -41,8 +42,8 @@ Json::Value ofApp::getEditorConfig3()
 	Json::Value config = Json::objectValue;
 	config["width"] = 40;
 	config["lines"] = 10;
-	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 48;
+//	config["font"] = "Menlo-Regular.ttf";
+	config["font-size"] = 30;
 	config["border-color"] = "#ffffff 100%";
 	config["border-width"] = 30;
 	config["border-corner"] = 20;
@@ -84,7 +85,7 @@ void ofApp::setup(){
 	scene.setSize(ofGetWidth(), ofGetHeight());	// set scene size to window size
 
 	// configure the editor	(look at ofxInterfaceTextEditor constructor for the full list of config values)
-	editor.setConfig(getEditorConfig3());
+	editor.setConfig(getEditorConfig4());
 
 	// set editor position at 50x50
 	editor.setPosition(50, 50);
