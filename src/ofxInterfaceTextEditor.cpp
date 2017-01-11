@@ -167,20 +167,6 @@ void ofxInterfaceTextEditor::draw()
 	lastRender.draw(-fboPad/2, -fboPad/2);
 }
 
-bool ofxInterfaceTextEditor::contains(const ofVec3f& global)
-{
-	if (!config.bTitle) {
-		return Node::contains(global);
-	}
-	else {
-		ofVec2f local = toLocal(global);
-		if (local.x < 0 || local.x > getWidth() || local.y < -config.titleBarHeight || local.y > getHeight()) {
-			return false;
-		}
-	}
-	return true;
-}
-
 void ofxInterfaceTextEditor::setText(const string &text, bool clearUndo)
 {
 	if (clearUndo) {
@@ -603,7 +589,12 @@ void ofxInterfaceTextEditor::drawTextEditor()
 
 	if (config.bTitle) {
 		if (config.borderCorner>0.1) {
-			ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), config.titleBarHeight, config.borderCorner, config.borderColor);
+			if (!bCollapsed) {
+				ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), config.titleBarHeight, config.borderCorner, config.borderCorner, 0, 0, config.borderColor);
+			}
+			else {
+				ofxNanoVG::one().fillRoundedRect(0, 0, getWidth(), config.titleBarHeight, config.borderCorner, config.borderColor);
+			}
 		}
 		else {
 			ofxNanoVG::one().fillRect(0, 0, getWidth(), config.titleBarHeight, config.borderColor);
@@ -687,7 +678,7 @@ void ofxInterfaceTextEditor::drawTextEditor()
 
 
 	// enable scissors for the draw calls below, limiting to visible text area
-	ofRectangle textWindow(halfBW+config.lineNumbersWidth+0.5*config.pad.x, config.titleBarHeight+halfBW, getWidth()-config.borderWidth-config.lineNumbersWidth-0.5*config.pad.x, getHeight()-2*config.borderWidth-config.titleBarHeight);
+	ofRectangle textWindow(config.borderWidth+config.lineNumbersWidth+config.pad.x, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth-config.lineNumbersWidth-config.pad.x, getHeight()-2*config.borderWidth-config.titleBarHeight-config.pad.y);
 	ofxNanoVG::one().enableScissor(textWindow.x, textWindow.y, textWindow.width, textWindow.height);
 
 	//////////////////////////////
@@ -776,7 +767,12 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	if (config.borderWidth>0.01) {
 		if (config.borderCorner>0.1) {
 			// Rounded corners
-			ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, config.borderCorner, config.borderColor, config.borderWidth);
+			if (config.bTitle) {
+				ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, 0, 0, config.borderCorner, config.borderCorner, config.borderColor, config.borderWidth);
+			}
+			else {
+				ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, config.borderCorner, config.borderColor, config.borderWidth);
+			}
 		}
 		else {
 			// Sharp corners
@@ -889,7 +885,7 @@ ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(size_t textPos)
 void ofxInterfaceTextEditor::onTouchDown(TouchEvent& event)
 {
 	ofVec2f local = toLocal(event.position);
-	if (config.bTitle && local.y < 0) {
+	if (local.y < config.titleBarHeight) {
 		if (local.x > getWidth()-config.fontSize) {
 			// touch to collapse button
 			bCollapsed = !bCollapsed;
@@ -910,12 +906,13 @@ void ofxInterfaceTextEditor::onTouchDown(TouchEvent& event)
 
 void ofxInterfaceTextEditor::onTouchMove(TouchEvent& event)
 {
+	ofVec2f local = toLocal(event.position);
 	if (bInDrag) {
 		ofVec3f m = event.position-event.prevPosition;
 		move(m);
 	}
-	else if (!bCollapsed) {
-		state.selection.end = toCaret(toLocal(event.position), view);
+	else if (!bCollapsed && local.y > config.titleBarHeight) {
+		state.selection.end = toCaret(local, view);
 		state.selection.active = true;
 	}
 }

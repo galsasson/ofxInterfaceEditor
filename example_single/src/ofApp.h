@@ -32,5 +32,10 @@ class ofApp : public ofBaseApp{
 	Node scene;
 	ofxInterfaceTextEditor editor;
 	bool bDebug;
-	
+
+	Json::Value getEditorConfig1();
+	Json::Value getEditorConfig2();
+	Json::Value getEditorConfig3();
+	Json::Value getEditorConfig4();
+
 };

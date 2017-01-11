@@ -58,7 +58,6 @@ public:
 	// Node orerrides
 	void update(float dt) override;
 	void draw() override;
-	bool contains(const ofVec3f& global) override;
 
 protected:
 	Json::Value configJson;

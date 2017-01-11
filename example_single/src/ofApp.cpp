@@ -1,5 +1,78 @@
 #include "ofApp.h"
 
+Json::Value ofApp::getEditorConfig1()
+{
+	Json::Value config = Json::objectValue;
+	config["width"] = 40;
+	config["lines"] = 10;
+	config["font"] = "Menlo-Regular.ttf";
+	config["font-size"] = 22;
+	config["border-color"] = "#ffffff 100%";
+	config["border-width"] = 20;
+	config["border-corner"] = 0;
+	config["pad"][0] =					20;
+	config["pad"][1] =					0;
+	config["background-color"] = "#222222 100%";
+	config["title"] = true;
+	config["draggable"] = true;
+	return config;
+}
+
+Json::Value ofApp::getEditorConfig2()
+{
+	Json::Value config = Json::objectValue;
+	config["width"] = 40;
+	config["lines"] = 10;
+	config["font"] = "Menlo-Regular.ttf";
+	config["font-size"] = 22;
+	config["border-color"] = "#ffffff 100%";
+	config["border-width"] = 0;
+	config["border-corner"] = 0;
+	config["pad"][0] =					20;
+	config["pad"][1] =					0;
+	config["background-color"] = "#222222 100%";
+	config["title"] = false;
+	config["draggable"] = false;
+	return config;
+}
+
+Json::Value ofApp::getEditorConfig3()
+{
+	Json::Value config = Json::objectValue;
+	config["width"] = 40;
+	config["lines"] = 10;
+	config["font"] = "Menlo-Regular.ttf";
+	config["font-size"] = 22;
+	config["border-color"] = "#ffffff 100%";
+	config["border-width"] = 4;
+	config["border-corner"] = 8;
+	config["pad"][0] =					4;
+	config["pad"][1] =					0;
+	config["background-color"] = "#222222 100%";
+	config["title"] = true;
+	config["draggable"] = true;
+	return config;
+}
+
+Json::Value ofApp::getEditorConfig4()
+{
+	Json::Value config = Json::objectValue;
+	config["width"] = 60;
+	config["lines"] = 16;
+	config["font"] = "Menlo-Regular.ttf";
+	config["font-size"] = 14;
+	config["border-color"] = "#ffffff 100%";
+	config["border-width"] = 1;
+	config["border-corner"] = 2;
+	config["pad"][0] =					2;
+	config["pad"][1] =					0;
+	config["background-color"] = "#222222 100%";
+	config["title"] = true;
+	config["draggable"] = true;
+	return config;
+}
+
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	bDebug = false;
@@ -10,19 +83,7 @@ void ofApp::setup(){
 	scene.setSize(ofGetWidth(), ofGetHeight());	// set scene size to window size
 
 	// configure the editor	(look at ofxInterfaceTextEditor constructor for the full list of config values)
-	Json::Value config = Json::objectValue;
-	config["width"] = 40;
-	config["lines"] = 10;
-	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 22;
-	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 4;
-	config["border-corner"] = 0;
-	config["pad"][0] =					6;
-	config["pad"][1] =					0;
-	config["background-color"] = "#222222 100%";
-	config["title"] = true;
-	editor.setConfig(config);
+	editor.setConfig(getEditorConfig3());
 
 	// set editor position at 50x50
 	editor.setPosition(50, 50);
