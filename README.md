@@ -1,2 +1,2 @@
-# ofxInterfaceEditor
-Text Editor view for ofxInterface
+# ofxInterfaceTextEditor
+Text Editor view for ofxInterface scene graph
