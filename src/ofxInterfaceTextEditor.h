@@ -25,6 +25,7 @@ public:
 
 	~ofxInterfaceTextEditor();
 	ofxInterfaceTextEditor();
+	ofxInterfaceTextEditor(const Json::Value& config);
 
 	void loadConfig(const string& filename);	// load config from file
 	void setConfig(const Json::Value& config);	// set editor config object
@@ -53,17 +54,26 @@ public:
 
 	void keyPressed(int key);	// use to pass keyboard events
 	void keyReleased(int key);	// use to pass keyboard events
-	void vscroll(int x, int y, float amount);	// use to pass vscroll events
+	void vscroll(float amount);	// use to pass vscroll events
+	static void vscroll(float x, float y, float amount);	// static vscroll that checks if the mouse is above the component
 
 	// Node orerrides
 	void update(float dt) override;
 	void draw() override;
+	bool contains(const ofVec3f& global) override;
+
+	// Focus handling
+	static ofxInterfaceTextEditor* getFocused();	// use this to pass keyboard events when there is more than one text editor
+	void requestFocus();
+	static void requestFocus(ofxInterfaceTextEditor* editor);
+	static vector<ofxInterfaceTextEditor*>& getAllEditors();
+
 
 protected:
 	Json::Value configJson;
 	ofFbo lastRender;
 	vector<string> textLines;
-	bool bDirty;
+	float bDirty;
 	int fboPad;
 	ofxNanoVG::Font* font;
 	ofRectangle view;			// current view rectangle
@@ -101,6 +111,8 @@ protected:
 		int maxLines;
 		int tabWidth;
 		string tabString;
+		ofColor focusColor;
+		float focusWidth;
 	} config;
 
 	struct selection_t {
@@ -119,6 +131,9 @@ protected:
 	stack<editor_state_t> undoStates;	// undo states
 	stack<editor_state_t> redoStates;	// redos states
 
+	// to handle focus - register every text editor in this vector
+	static vector<ofxInterfaceTextEditor*> allEditors;
+	static ofxInterfaceTextEditor* focusedEditor;
 
 	// can override to change the drawing code (currently using ofxNanoVG)
 	virtual void renderToFbo(ofFbo& fbo);

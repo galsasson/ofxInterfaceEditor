@@ -9,9 +9,16 @@
 #include "ofxInterfaceTextEditor.h"
 #include "ofxJsonParser.h"
 
+ofxInterfaceTextEditor* ofxInterfaceTextEditor::focusedEditor = NULL;
+vector<ofxInterfaceTextEditor*> ofxInterfaceTextEditor::allEditors;
+
 ofxInterfaceTextEditor::~ofxInterfaceTextEditor()
 {
-
+	// remove this text editor
+	allEditors.erase(std::remove(allEditors.begin(), allEditors.end(), this), allEditors.end());
+	if (focusedEditor == this) {
+		focusedEditor = NULL;
+	}
 }
 
 ofxInterfaceTextEditor::ofxInterfaceTextEditor()
@@ -38,6 +45,8 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 	configJson["title"] =					false;
 	configJson["title-text"] =				"Text Editor";
 	configJson["tab-width"] =				2;
+	configJson["focus-color"] =				"#ddaa00 100%";
+	configJson["focus-width"] =				0;
 
 	// setup nanovg
 	ofxNanoVG::one().setup();
@@ -49,7 +58,7 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 
 	// init variables
 	fboPad =			256;
-	bDirty =			false;
+	bDirty =			0;
 	font =				NULL;
 	caretBlink =		0;
 	bShiftPressed =		false;
@@ -63,8 +72,17 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 	copyTimer =			0;
 	view = state.targetView =	ofRectangle(0, 0, 0, 0);
 	textLines.push_back("");
+	state.selection.active = false;
 
 	setConfig(configJson);
+	// add this text editor
+	allEditors.push_back(this);
+	requestFocus();
+}
+
+ofxInterfaceTextEditor::ofxInterfaceTextEditor(const Json::Value& _config) : ofxInterfaceTextEditor()
+{
+	setConfig(_config);
 }
 
 void ofxInterfaceTextEditor::setConfig(const Json::Value& conf)
@@ -111,12 +129,14 @@ void ofxInterfaceTextEditor::setConfig(const Json::Value& conf)
 	for (int i=0; i<config.tabWidth; i++) {
 		config.tabString = config.tabString+" ";
 	}
+	config.focusColor = ofxJsonParser::parseColor(configJson["focus-color"]);
+	config.focusWidth = ofxJsonParser::parseFloat(configJson["focus-width"]);
 
 	// set size
 	state.targetView = view = ofRectangle(0, 0, config.width*lw, config.lines*config.fontSize);
 	setSize(view.width+config.borderWidth*2, view.height+config.titleBarHeight+2*config.borderWidth);
 
-	bDirty = true;
+	bDirty = 0.5;
 }
 
 void ofxInterfaceTextEditor::setTitle(const string& name)
@@ -147,10 +167,10 @@ void ofxInterfaceTextEditor::update(float dt)
 	// can be optimized (calc only on change);
 	config.lineNumbersWidth = getLineNumberWidth();
 
-//	if (bDirty) {
+	if (focusedEditor == this || bDirty>0) {
 		renderToFbo(lastRender);
-		bDirty = false;
-//	}
+		bDirty -= dt;
+	}
 
 	caretBlink += 5*dt;
 	if (copyTimer > 0) {
@@ -165,6 +185,48 @@ void ofxInterfaceTextEditor::draw()
 {
 	ofSetColor(255);
 	lastRender.draw(-fboPad/2, -fboPad/2);
+}
+
+bool ofxInterfaceTextEditor::contains(const ofVec3f& global)
+{
+	if (bCollapsed) {
+		ofVec2f local = toLocal(global);
+		if (local.x < 0 || local.x > getWidth() || local.y < 0 || local.y > config.titleBarHeight) {
+			return false;
+		}
+		return true;
+	}
+	else {
+		return Node::contains(global);
+	}
+}
+
+void ofxInterfaceTextEditor::requestFocus()
+{
+	if (focusedEditor != NULL) {
+		focusedEditor->bDirty = 0.5;
+	}
+
+	focusedEditor = this;
+}
+
+void ofxInterfaceTextEditor::requestFocus(ofxInterfaceTextEditor* editor)
+{
+	if (focusedEditor != NULL) {
+		focusedEditor->bDirty = 0.5;
+	}
+
+	focusedEditor = editor;
+}
+
+ofxInterfaceTextEditor* ofxInterfaceTextEditor::getFocused()
+{
+	return focusedEditor;
+}
+
+vector<ofxInterfaceTextEditor*>& ofxInterfaceTextEditor::getAllEditors()
+{
+	return allEditors;
 }
 
 void ofxInterfaceTextEditor::setText(const string &text, bool clearUndo)
@@ -539,13 +601,21 @@ void ofxInterfaceTextEditor::keyReleased(int key)
 	}
 }
 
-void ofxInterfaceTextEditor::vscroll(int x, int y, float amount)
+void ofxInterfaceTextEditor::vscroll(float amount)
 {
-	if (!contains(ofVec2f(x,y))) {
-		return;
-	}
 	state.targetView.y -= 4*amount;
 	limitView();
+	bDirty = 1;
+}
+
+void ofxInterfaceTextEditor::vscroll(float x, float y, float amount)
+{
+	ofVec2f p(x, y);
+	for (ofxInterfaceTextEditor* editor: allEditors) {
+		if (editor->contains(p)) {
+			editor->vscroll(amount);
+		}
+	}
 }
 
 void ofxInterfaceTextEditor::renderToFbo(ofFbo& fbo)
@@ -757,10 +827,13 @@ void ofxInterfaceTextEditor::drawTextEditor()
 	///////////////////////////////
 	// DRAW CARET
 	///////////////////////////////
-	ofVec2f cPos = toNode(state.caret, view);
-	if (cos(caretBlink)>0) {
-		ofSetColor(255);
-		ofxNanoVG::one().fillRect(cPos.x-1, cPos.y, 2, config.fontSize, config.fontColor);
+	if (focusedEditor == this) {
+		// only if we have focus
+		ofVec2f cPos = toNode(state.caret, view);
+		if (cos(caretBlink)>0) {
+			ofSetColor(255);
+			ofxNanoVG::one().fillRect(cPos.x-1, cPos.y, 2, config.fontSize, config.fontColor);
+		}
 	}
 
 	// disable scissors
@@ -773,15 +846,31 @@ void ofxInterfaceTextEditor::drawTextEditor()
 		if (config.borderCorner>0.1) {
 			// Rounded corners
 			if (config.bTitle) {
+				// with title bar so top should be sharp corners
 				ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, 0, 0, config.borderCorner, config.borderCorner, config.borderColor, config.borderWidth);
 			}
 			else {
+				// no title bar so all is round
 				ofxNanoVG::one().strokeRoundedRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, config.borderCorner, config.borderColor, config.borderWidth);
 			}
 		}
 		else {
 			// Sharp corners
 			ofxNanoVG::one().strokeRect(halfBW, halfBW+config.titleBarHeight, getWidth()-config.borderWidth, getHeight()-config.borderWidth-config.titleBarHeight, config.borderColor, config.borderWidth);
+		}
+	}
+
+	//////////////////////////////
+	// DRAW FOCUS
+	//////////////////////////////
+	if (config.focusWidth > 0.01 && focusedEditor == this && allEditors.size()>1) {
+		if (config.borderCorner>0.1) {
+			// no title bar so all is round
+			ofxNanoVG::one().strokeRoundedRect(0.5*config.focusWidth, 0.5*config.focusWidth, getWidth()-config.focusWidth, getHeight()-config.focusWidth, config.borderCorner, config.focusColor, config.focusWidth);
+		}
+		else {
+			// Sharp corners
+			ofxNanoVG::one().strokeRect(0.5*config.focusWidth, 0.5*config.focusWidth, getWidth()-config.focusWidth, getHeight()-config.focusWidth, config.focusColor, config.focusWidth);
 		}
 	}
 }
@@ -889,11 +978,18 @@ ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(size_t textPos)
 
 void ofxInterfaceTextEditor::onTouchDown(TouchEvent& event)
 {
+	requestFocus();
+
 	ofVec2f local = toLocal(event.position);
 	if (local.y < config.titleBarHeight) {
 		if (local.x > getWidth()-config.fontSize) {
 			// touch to collapse button
 			bCollapsed = !bCollapsed;
+			if (bCollapsed) {
+				if (focusedEditor == this) {
+					ofxInterfaceTextEditor::requestFocus(NULL);
+				}
+			}
 		}
 		else if (config.bDraggable) {
 			// touch on title

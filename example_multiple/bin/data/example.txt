@@ -1,0 +1,15 @@
+#include <iostream>
+#incldue <regex>
+
+using namespace std;
+
+cout<<"Hello text editor!"<<endl;
+
+some more text with horizontal scrolling to test
+and
+some
+more
+lines to get vertical scrolling too!!!
+
+
+

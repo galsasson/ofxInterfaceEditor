@@ -147,6 +147,12 @@ void ofApp::keyPressed(int key){
 	if (key == 'B') {
 		bDebug = !bDebug;
 	}
+	else if (key == 'S') {
+		Json::Value conf;
+		conf["width"] = int(ofRandom(10, 50));
+		conf["lines"] = int(ofRandom(1,12));
+		editor.setConfig(conf);
+	}
 }
 
 //--------------------------------------------------------------
