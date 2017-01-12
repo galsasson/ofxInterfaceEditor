@@ -11,6 +11,7 @@
 
 ofxInterfaceTextEditor* ofxInterfaceTextEditor::focusedEditor = NULL;
 vector<ofxInterfaceTextEditor*> ofxInterfaceTextEditor::allEditors;
+string ofxInterfaceTextEditor::internalPasteboard = "";
 
 ofxInterfaceTextEditor::~ofxInterfaceTextEditor()
 {
@@ -28,8 +29,7 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 	configJson["width"] =					80;	// in chars
 	configJson["lines"] =					20;	// in lines
 	configJson["max-lines"] =				-1;
-	configJson["pad"][0] =					6;
-	configJson["pad"][1] =					0;
+	configJson["padx"] =					6;	// when text starts in a line
 	configJson["background-color"] =		"#111111 100%";
 	configJson["border-width"] =			2;
 	configJson["border-color"] =			"#ffffff 100%";
@@ -102,7 +102,7 @@ void ofxInterfaceTextEditor::setConfig(const Json::Value& conf)
 	config.borderWidth = ofxJsonParser::parseFloat(configJson["border-width"]);
 	config.borderCorner = ofxJsonParser::parseFloat(configJson["border-corner"]);
 	config.fontSize = ofxJsonParser::parseFloat(configJson["font-size"]);
-	config.pad = ofxJsonParser::parseVector(configJson["pad"]);
+	config.padx = ofxJsonParser::parseFloat(configJson["padx"]);
 	config.bLineNumbers = ofxJsonParser::parseBool(configJson["line-numbers"]);
 	config.lineNumbersColor = ofxJsonParser::parseColor(configJson["line-numbers-color"]);
 	config.lineNumbersBGColor = ofxJsonParser::parseColor(configJson["line-numbers-bg-color"]);
@@ -422,7 +422,7 @@ void ofxInterfaceTextEditor::keyPressed(int key)
 				}
 				size_t bpos = toTextPos(sb);
 				size_t size = toTextPos(se)-bpos;
-				pasteboard = str.substr(bpos, size);
+				clipboardCopy(str.substr(bpos, size));
 				str.erase(bpos, size);
 				setText(str);
 				state.selection.active = false;
@@ -433,14 +433,15 @@ void ofxInterfaceTextEditor::keyPressed(int key)
 		else if (key == 'c') {				// Copy
 			copyTimer += 0.2;
 			if (state.selection.active) {
-				pasteboard = getSelectedText();
+				clipboardCopy(getSelectedText());
 			}
 			else {
-				pasteboard = textLines[state.caret.line] + "\n";
+				clipboardCopy(textLines[state.caret.line] + "\n");
 			}
 			bringViewToCaret();
 		}
 		else if (key == 'v') {				// Paste
+			string pasteboard = clipboardPaste();
 			if (pasteboard.size()>0) {
 				pushUndoState();
 				if (state.selection.active) {
@@ -739,7 +740,7 @@ void ofxInterfaceTextEditor::drawTextEditor()
 		}
 
 		// draw numbers
-		ofxNanoVG::one().enableScissor(config.borderWidth, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth, getHeight()-config.titleBarHeight-2*config.borderWidth-config.pad.y);
+		ofxNanoVG::one().enableScissor(config.borderWidth, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth, getHeight()-config.titleBarHeight-2*config.borderWidth);
 		float y=config.titleBarHeight+config.borderWidth+0.5*config.fontSize-frac*config.fontSize;
 		float x = config.borderWidth+config.lineNumbersWidth-2;
 		for (int i=first.line; i<=last.line; i++) {
@@ -753,20 +754,19 @@ void ofxInterfaceTextEditor::drawTextEditor()
 
 
 	// enable scissors for the draw calls below, limiting to visible text area
-	ofRectangle textWindow(config.borderWidth+config.lineNumbersWidth+config.pad.x, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth-config.lineNumbersWidth-config.pad.x, getHeight()-2*config.borderWidth-config.titleBarHeight-config.pad.y);
+	ofRectangle textWindow(config.borderWidth+config.lineNumbersWidth+config.padx, config.titleBarHeight+config.borderWidth, getWidth()-2*config.borderWidth-config.lineNumbersWidth-config.padx, getHeight()-2*config.borderWidth-config.titleBarHeight);
 	ofxNanoVG::one().enableScissor(textWindow.x, textWindow.y, textWindow.width, textWindow.height);
 
 	//////////////////////////////
 	// DRAW TEXT
 	//////////////////////////////
-	float y = config.titleBarHeight + config.borderWidth + config.pad.y;
-	float x = config.borderWidth+config.lineNumbersWidth+config.pad.x;
+	float y = config.titleBarHeight + config.borderWidth;
+	float x = config.borderWidth+config.lineNumbersWidth+config.padx;
 	ofPushMatrix();
 	ofTranslate(-view.x, -frac*config.fontSize);
 	ofxNanoVG::one().applyOFMatrix();
 	for (int i=first.line; i<=last.line; i++) {
 		string& line = textLines[i];
-//		ofxNanoVG::one().fillRect(halfBW+config.lineNumbersWidth, config.pad.y+y, 0.5f*config.pad.x, config.fontSize, ofColor(config.fontColor, (i==state.caret.line)?140:90));
 		ofxNanoVG::one().setFillColor(config.fontColor);
 		ofxNanoVG::one().setTextAlign(ofxNanoVG::NVG_ALIGN_LEFT, ofxNanoVG::NVG_ALIGN_TOP);
 		ofxNanoVG::one().drawText(font, x, y, line, config.fontSize);
@@ -798,7 +798,7 @@ void ofxInterfaceTextEditor::drawTextEditor()
 		}
 		else {
 			float rightEdge = getWidth()-halfBW;
-			float leftEdge = halfBW+config.lineNumbersWidth+config.pad.x;
+			float leftEdge = halfBW+config.lineNumbersWidth+config.padx;
 			// first line
 			ofxNanoVG::one().fillRect(sPos.x, sPos.y, rightEdge-sPos.x, config.fontSize, c);
 			for (int l=sc.line+1; l<ec.line; l++) {
@@ -904,8 +904,8 @@ ofxInterfaceTextEditor::caret_t ofxInterfaceTextEditor::toCaret(ofVec2f p, ofRec
 	if (config.bLineNumbers) {
 		p.x -= config.lineNumbersWidth;
 	}
-	p.x -= config.pad.x + config.borderWidth;
-	p.y -= config.pad.y + config.titleBarHeight + config.borderWidth;
+	p.x -= config.padx + config.borderWidth;
+	p.y -= config.titleBarHeight + config.borderWidth;
 	p.x += _view.x;
 	p.y += _view.y;
 
@@ -936,8 +936,8 @@ ofVec2f ofxInterfaceTextEditor::toNode(const ofxInterfaceTextEditor::caret_t& _c
 ofVec2f ofxInterfaceTextEditor::toNode(int line, int chr, ofRectangle& _view)
 {
 	ofVec2f p(chr*config.letterSize.x, line*config.fontSize);
-	p.x += config.borderWidth+config.pad.x;
-	p.y += config.pad.y + config.titleBarHeight + config.borderWidth;
+	p.x += config.borderWidth+config.padx;
+	p.y += config.titleBarHeight + config.borderWidth;
 	p.x -= _view.x;
 	p.y -= _view.y;
 
@@ -1093,7 +1093,7 @@ void ofxInterfaceTextEditor::bringViewToCaret()
 
 	// check x
 	float rightLimit = getWidth()-config.borderWidth-2*config.letterSize.x;
-	float leftLimit = config.borderWidth+config.lineNumbersWidth+config.pad.x+5*config.letterSize.x;
+	float leftLimit = config.borderWidth+config.lineNumbersWidth+config.padx+5*config.letterSize.x;
 	if (cPos.x < leftLimit) {
 		state.targetView.x += cPos.x-leftLimit;
 		if (state.targetView.x<0) {
@@ -1205,4 +1205,29 @@ bool ofxInterfaceTextEditor::fireEvent(ofEvent<ofxInterfaceTextEditor::EventArgs
 	struct EventArgs args{this,true};
 	ofNotifyEvent(event, args, this);
 	return args.continueNormalBehavior;
+}
+
+
+//---------------------------
+// Copy & Paste
+//---------------------------
+
+void ofxInterfaceTextEditor::clipboardCopy(const string & content) {
+	ofAppGLFWWindow * window = (ofAppGLFWWindow *)ofGetWindowPtr();
+	if (window) {
+		glfwSetClipboardString(window->getGLFWWindow(), content.c_str());
+	}
+	else {
+		internalPasteboard = content;
+	}
+}
+
+string ofxInterfaceTextEditor::clipboardPaste() {
+	ofAppGLFWWindow * window = (ofAppGLFWWindow *)ofGetWindowPtr();
+	if (window) {
+		return string(glfwGetClipboardString(window->getGLFWWindow()));
+	}
+	else {
+		return internalPasteboard;
+	}
 }

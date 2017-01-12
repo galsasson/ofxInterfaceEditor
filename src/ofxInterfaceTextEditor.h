@@ -80,7 +80,7 @@ protected:
 	bool bShiftPressed;
 	bool bCommandKeyPressed;
 	bool bControlKeyPressed;
-	string pasteboard;
+	static string internalPasteboard;
 	float caretBlink;
 	bool bInDrag;
 	bool bCollapsed;
@@ -92,7 +92,7 @@ protected:
 		float borderWidth;
 		float borderCorner;
 		float fontSize;
-		ofVec2f pad;
+		float padx;
 		bool bLineNumbers;
 		float lineNumbersWidth;
 		ofColor fontColor;
@@ -158,6 +158,8 @@ protected:
 	void pushRedoState();
 	void popRedoState();
 	bool fireEvent(ofEvent<EventArgs>& event);
+	void clipboardCopy(const string& content);
+	string clipboardPaste();
 };
 
 #endif /* ofxInterfaceTextEditor_h */

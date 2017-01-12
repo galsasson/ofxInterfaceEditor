@@ -31,7 +31,7 @@ Json::Value ofApp::getEditorConfig2()
 	config["border-color"] =	"#ffffff 100%";
 	config["border-width"] =	0;
 	config["border-corner"] =	0;
-	config["pad"][0] =			1;
+	config["pad"][0] =			4;
 	config["pad"][1] =			0;
 	config["background-color"] ="#222222 100%";
 	config["title"] =			false;
