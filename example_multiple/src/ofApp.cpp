@@ -10,8 +10,7 @@ Json::Value ofApp::getEditorConfig1()
 	config["border-color"] =	"#ffffff 100%";
 	config["border-width"] =	20;
 	config["border-corner"] =	0;
-	config["pad"][0] =			20;
-	config["pad"][1] =			0;
+	config["padx"] =			20;
 	config["background-color"] ="#222222 100%";
 	config["title"] =			true;
 	config["draggable"] =		true;
@@ -31,8 +30,7 @@ Json::Value ofApp::getEditorConfig2()
 	config["border-color"] =	"#ffffff 100%";
 	config["border-width"] =	0;
 	config["border-corner"] =	0;
-	config["pad"][0] =			4;
-	config["pad"][1] =			0;
+	config["padx"] =			4;
 	config["background-color"] ="#222222 100%";
 	config["title"] =			false;
 	config["draggable"] =		false;
@@ -50,8 +48,7 @@ Json::Value ofApp::getEditorConfig3()
 	config["border-color"] =	"#ffffff 100%";
 	config["border-width"] =	10;
 	config["border-corner"] =	10;
-	config["pad"][0] =			4;
-	config["pad"][1] =			0;
+	config["padx"] =			4;
 	config["background-color"] ="#222222 100%";
 	config["title"] =			true;
 	config["draggable"] =		true;
@@ -71,8 +68,7 @@ Json::Value ofApp::getEditorConfig4()
 	config["border-color"] =	"#ffffff 100%";
 	config["border-width"] =	1;
 	config["border-corner"] =	2;
-	config["pad"][0] =			2;
-	config["pad"][1] =			0;
+	config["padx"] =			2;
 	config["background-color"] ="#222222 100%";
 	config["title"] =			true;
 	config["draggable"] =		true;

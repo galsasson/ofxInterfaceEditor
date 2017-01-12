@@ -26,23 +26,23 @@ ofxInterfaceTextEditor::ofxInterfaceTextEditor()
 {
 	// default config
 	configJson = Json::objectValue;
-	configJson["width"] =					80;	// in chars
-	configJson["lines"] =					20;	// in lines
+	configJson["width"] =					60;	// in chars
+	configJson["lines"] =					16;	// in lines
 	configJson["max-lines"] =				-1;
 	configJson["padx"] =					6;	// when text starts in a line
 	configJson["background-color"] =		"#111111 100%";
 	configJson["border-width"] =			2;
 	configJson["border-color"] =			"#ffffff 100%";
-	configJson["border-corner"] =			14;
+	configJson["border-corner"] =			6;
 	configJson["font"] =					"Inconsolata-Regular.ttf";
 	configJson["font-color"] =				"#ffffff 100%";
-	configJson["font-size"] =				22;
-	configJson["line-numbers"] =			false;
+	configJson["font-size"] =				18;
+	configJson["line-numbers"] =			true;
 	configJson["line-numbers-color"] =		"#ffffff 100%";
 	configJson["line-numbers-bg-color"] =	"#434445 100%";
 	configJson["selection-color"] =			"#aaaaaa 50%";
-	configJson["draggable"] =				false;
-	configJson["title"] =					false;
+	configJson["draggable"] =				true;
+	configJson["title"] =					true;
 	configJson["title-text"] =				"Text Editor";
 	configJson["tab-width"] =				2;
 	configJson["focus-color"] =				"#ddaa00 100%";

@@ -1,96 +1,17 @@
 #include "ofApp.h"
 
-Json::Value ofApp::getEditorConfig1()
-{
-	Json::Value config = Json::objectValue;
-	config["width"] = 40;
-	config["lines"] = 10;
-	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 22;
-	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 20;
-	config["border-corner"] = 0;
-	config["pad"][0] =					20;
-	config["pad"][1] =					0;
-	config["background-color"] = "#222222 100%";
-	config["title"] = true;
-	config["draggable"] = true;
-	config["line-numbers"] = true;
-	return config;
-}
-
-Json::Value ofApp::getEditorConfig2()
-{
-	Json::Value config = Json::objectValue;
-	config["width"] = 40;
-	config["lines"] = 10;
-	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 22;
-	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 0;
-	config["border-corner"] = 0;
-	config["pad"][0] =					1;
-	config["pad"][1] =					0;
-	config["background-color"] = "#222222 100%";
-	config["title"] = false;
-	config["draggable"] = false;
-	return config;
-}
-
-Json::Value ofApp::getEditorConfig3()
-{
-	Json::Value config = Json::objectValue;
-	config["width"] = 40;
-	config["lines"] = 10;
-//	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 30;
-	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 30;
-	config["border-corner"] = 20;
-	config["pad"][0] =					4;
-	config["pad"][1] =					0;
-	config["background-color"] = "#222222 100%";
-	config["title"] = true;
-	config["draggable"] = true;
-	config["line-numbers"] = true;
-	return config;
-}
-
-Json::Value ofApp::getEditorConfig4()
-{
-	Json::Value config = Json::objectValue;
-	config["width"] = 60;
-	config["lines"] = 16;
-	config["font"] = "Menlo-Regular.ttf";
-	config["font-size"] = 14;
-	config["border-color"] = "#ffffff 100%";
-	config["border-width"] = 1;
-	config["border-corner"] = 2;
-	config["pad"][0] =					2;
-	config["pad"][1] =					0;
-	config["background-color"] = "#222222 100%";
-	config["title"] = true;
-	config["draggable"] = true;
-	return config;
-}
-
-
 //--------------------------------------------------------------
 void ofApp::setup(){
-	bDebug = false;
 	ofSetFrameRate(60);
 
 	// setup the scene
 	TouchManager::one().setup(&scene);			// TouchManager should know about the scene
 	scene.setSize(ofGetWidth(), ofGetHeight());	// set scene size to window size
 
-	// configure the editor	(look at ofxInterfaceTextEditor constructor for the full list of config values)
-	editor.setConfig(getEditorConfig4());
-
-	// set editor position at 50x50
-	editor.setPosition(50, 50);
 	// add the text editor to the scene
 	scene.addChild(&editor);
+	// set editor position at 50x50
+	editor.setPosition(50, 50);
 
 	// create save/load buttons
 	BitmapTextButton* tb = new BitmapTextButton();
@@ -114,14 +35,10 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	ofBackground(0);
+	ofSetColor(255);
+	ofDrawBitmapString("Hit 'S' to change size and colors", 3, 11);
 	// render scene
 	scene.render();
-
-	if (bDebug) {
-		ofSetColor(255, 0, 0);
-		ofNoFill();
-		ofDrawRectangle(editor.getX(), editor.getY(), editor.getWidth(), editor.getHeight());
-	}
 }
 
 
@@ -144,13 +61,16 @@ void ofApp::onSaveClicked(ofxInterface::TouchEvent &event)
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	editor.keyPressed(key);
-	if (key == 'B') {
-		bDebug = !bDebug;
-	}
-	else if (key == 'S') {
+	if (key == 'S') {
 		Json::Value conf;
-		conf["width"] = int(ofRandom(10, 50));
-		conf["lines"] = int(ofRandom(1,12));
+		conf["width"] = int(ofRandom(10, 60));
+		conf["lines"] = int(ofRandom(1,20));
+		conf["background-color"][0] = ofRandom(1);
+		conf["background-color"][1] = ofRandom(1);
+		conf["background-color"][2] = ofRandom(1);
+		conf["font-color"][0] = ofRandom(1);
+		conf["font-color"][1] = ofRandom(1);
+		conf["font-color"][2] = ofRandom(1);
 		editor.setConfig(conf);
 	}
 }
@@ -193,7 +113,7 @@ void ofApp::mouseExited(int x, int y){
 //--------------------------------------------------------------
 void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY)
 {
-	editor.vscroll(x, y, scrollY);
+	editor.vscroll(scrollY);
 }
 
 //--------------------------------------------------------------
